@@ -12,6 +12,9 @@
       <UniqueIdentifier>{2c3d4c8c-5d1a-459a-a05a-a4e4b608a44e}</UniqueIdentifier>
       <Extensions>fx;fxh;hlsl</Extensions>
     </Filter>
+    <Filter Include="myrandom">
+      <UniqueIdentifier>{d87870d2-0a83-43d4-bb3e-393d795712f5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="DXUT\Optional\directx.ico">
@@ -78,17 +81,21 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="EmptyProject9.cpp" />
-    <ClCompile Include="MyRnd.cpp" />
     <ClCompile Include="TDXHydrogenScene.cpp" />
     <ClCompile Include="TDXScene.cpp" />
     <ClCompile Include="WaveFunctions.cpp" />
     <ClCompile Include="DxClassTest.cpp" />
+    <ClCompile Include="myrandom\myrand.cpp">
+      <Filter>myrandom</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="MyRnd.h" />
     <ClInclude Include="TDXHydrogenScene.h" />
     <ClInclude Include="TDXScene.h" />
     <ClInclude Include="WaveFunctions.h" />
+    <ClInclude Include="myrandom\myrand.h">
+      <Filter>myrandom</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CLInclude Include="resource.h">

@@ -1,7 +1,7 @@
 #include "DXUT.h"
 #include "DXUTmisc.h"
 #include "resource.h"
-
+#include "myrandom/myrand.h"
 
 
 #include "TDXHydrogenScene.h"
@@ -16,14 +16,11 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <vector>
 
 //#define	USE_MyRnd	1	//自作乱数関数を使うなら定義
 //#define REJECT 1		//Nの意味　REJECT定義あり：確率によって点を破棄し、N個の点を生成する（遅い）　定義なし：N回試行する（速い）
 #define USE_CAMERA 1	//DXUTのCameraクラスを使うかどうか
-
-#ifdef	USE_MyRnd
-#include "MyRnd.h"
-#endif
 
 
 TDXHydrogenScene::TDXHydrogenScene(void) :
@@ -101,19 +98,14 @@ HRESULT TDXHydrogenScene::Init(ID3D10Device* pd3dDevice)
     pd3dDevice->IASetInputLayout( g_pVertexLayout );
 
     // Create vertex buffer
-    SimpleVertex2 vertices[N];
+    std::vector<SimpleVertex2> vertices(N);
 
 	std::ofstream	ofs("calc_log.txt");;
 	
 
-#ifdef	USE_MyRnd
-	MyRnd	rnd;
-	rnd.Init((unsigned)time(NULL));
-#else
-	srand((unsigned)time(NULL));
-#endif
+    myrandom::MyRand mr;
 	float	x,y,z, p , pp ,a ,sum = 0.0f, px, py ,pz;
-	const float L = 0.1f;
+	const float L = 1.0f;
 	float maxpp = 0.0f;
 	int nn = 0;
 	float dx = 0.01;
@@ -124,18 +116,12 @@ HRESULT TDXHydrogenScene::Init(ID3D10Device* pd3dDevice)
 		do {
 #endif
 
-#ifdef	USE_MyRnd
-			x = L * (1.0f - 2.0f * (float)rnd.NextD());
-			y = L * (1.0f - 2.0f * (float)rnd.NextD());
-			z = L * (1.0f - 2.0f * (float)rnd.NextD());
-			p = (float)rnd.NextD();
-#else
-			x = L * (1.0f - 2.0f * (float)rand() / RAND_MAX);
-			y = L * (1.0f - 2.0f * (float)rand() / RAND_MAX);
-			z = L * (1.0f - 2.0f * (float)rand() / RAND_MAX);
-			p = (float)rand() / RAND_MAX;
-#endif
-			pp = prob(x / L,y / L ,z / L);	//ここを見たい波動関数に変える
+			x = L * (1.0f - 2.0f * mr.myrand());
+            y = L * (1.0f - 2.0f * mr.myrand());
+            z = L * (1.0f - 2.0f * mr.myrand());
+            p = mr.myrand();
+
+			pp = prob1s(x / L,y / L ,z / L);	//ここを見たい波動関数に変える
 			a = (pp>0) - (pp<0);
 			pp *= pp;
 			nn++;
@@ -193,7 +179,7 @@ HRESULT TDXHydrogenScene::Init(ID3D10Device* pd3dDevice)
     bd.CPUAccessFlags = 0;
     bd.MiscFlags = 0;
     D3D10_SUBRESOURCE_DATA InitData;
-    InitData.pSysMem = vertices;
+    InitData.pSysMem = vertices.data();
     V_RETURN( pd3dDevice->CreateBuffer( &bd, &InitData, &g_pVertexBuffer ) );
 
     // Set vertex buffer

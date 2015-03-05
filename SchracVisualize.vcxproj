@@ -385,10 +385,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="DxClassTest.cpp" />
-    <ClCompile Include="MyRnd.cpp" />
+    <ClCompile Include="myrandom\myrand.cpp" />
     <ClCompile Include="TDXHydrogenScene.cpp" />
     <ClCompile Include="TDXScene.cpp" />
     <ClCompile Include="WaveFunctions.cpp" />
+    <ClInclude Include="myrandom\myrand.h" />
     <ClInclude Include="TDXHydrogenScene.h" />
     <ClInclude Include="TDXScene.h" />
     <ClInclude Include="WaveFunctions.h" />
@@ -422,7 +423,6 @@
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="MyRnd.h" />
     <CLInclude Include="resource.h" />
     <ResourceCompile Include="SchracVisualize.rc" />
   </ItemGroup>

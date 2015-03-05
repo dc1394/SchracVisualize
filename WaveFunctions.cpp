@@ -17,6 +17,13 @@ float	prob(float x, float y, float z)
 	}
 }
 
+float	prob1s(float x, float y, float z)
+{
+    float r = sqrt(x*x + y*y + z*z);
+    
+    return 4.0 * r * r * exp(-2.0 * r);
+}
+
 //…‘fŒ´q1py‹O“¹ Z=1 a_0 = 1‚Æ‚·‚é
 
 

@@ -53,6 +53,6 @@ D3DXVECTOR4                         g_vMeshColor;
 D3DXVECTOR4							g_vLightDir;
 CModelViewerCamera                  g_Camera;               // A model viewing camera
 
-static	const unsigned int N=20000;
+static	const unsigned int N=100000;
 
 };

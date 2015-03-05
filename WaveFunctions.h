@@ -1,6 +1,6 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
-
+float	prob1s(float x, float y, float z);
 float	prob(float x, float y, float z);
 float	prob2s(float x, float y, float z);
 float	prob2py(float x, float y, float z);
