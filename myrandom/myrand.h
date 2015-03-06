@@ -25,14 +25,18 @@ namespace myrandom {
         //! A constructor.
         /*!
             唯一のコンストラクタ
+            \param min 乱数分布の最小値
+            \param max 乱数分布の最大値
         */
-        MyRand();
+        MyRand(float min, float max);
 
         //! A destructor.
         /*!
             デフォルトデストラクタ
         */
         ~MyRand() = default;
+
+        // #endregion コンストラクタ・デストラクタ
 
         // #region メンバ関数
 
@@ -69,6 +73,12 @@ namespace myrandom {
         std::mt19937 randengine_;
 
         // #region 禁止されたコンストラクタ・メンバ関数
+
+        //! A private constructor (deleted).
+        /*!
+        デフォルトコンストラクタ（禁止）
+        */
+        MyRand() = delete;
 
         //! A private copy constructor (deleted).
         /*!

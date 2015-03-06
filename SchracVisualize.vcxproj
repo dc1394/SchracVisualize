@@ -386,10 +386,12 @@
   <ItemGroup>
     <ClCompile Include="DxClassTest.cpp" />
     <ClCompile Include="myrandom\myrand.cpp" />
+    <ClCompile Include="readdatafile.cpp" />
     <ClCompile Include="TDXHydrogenScene.cpp" />
     <ClCompile Include="TDXScene.cpp" />
     <ClCompile Include="WaveFunctions.cpp" />
     <ClInclude Include="myrandom\myrand.h" />
+    <ClInclude Include="readdatafile.h" />
     <ClInclude Include="TDXHydrogenScene.h" />
     <ClInclude Include="TDXScene.h" />
     <ClInclude Include="WaveFunctions.h" />

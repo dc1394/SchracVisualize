@@ -9,8 +9,8 @@
 #include <boost/range/algorithm.hpp>    // for boost::generate
 
 namespace myrandom {
-    MyRand::MyRand() :
-        distribution_(0.0f, 1.0f)
+    MyRand::MyRand(float min, float max) :
+        distribution_(min, max)
     {
         // ランダムデバイス
         std::random_device rnd;

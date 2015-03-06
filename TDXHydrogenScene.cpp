@@ -18,8 +18,6 @@
 #include <iomanip>
 #include <vector>
 
-//#define	USE_MyRnd	1	//自作乱数関数を使うなら定義
-//#define REJECT 1		//Nの意味　REJECT定義あり：確率によって点を破棄し、N個の点を生成する（遅い）　定義なし：N回試行する（速い）
 #define USE_CAMERA 1	//DXUTのCameraクラスを使うかどうか
 
 
@@ -100,45 +98,40 @@ HRESULT TDXHydrogenScene::Init(ID3D10Device* pd3dDevice)
     // Create vertex buffer
     std::vector<SimpleVertex2> vertices(N);
 
-	std::ofstream	ofs("calc_log.txt");;
+	std::ofstream	ofs("calc_log.txt");
 	
+    myrandom::MyRand mr(-3.0, 3.0);
+    myrandom::MyRand mr2(0.0, 4.0 * std::exp(-2.0));
 
-    myrandom::MyRand mr;
 	float	x,y,z, p , pp ,a ,sum = 0.0f, px, py ,pz;
-	const float L = 1.0f;
+	const float L = 0.3f;
 	float maxpp = 0.0f;
 	int nn = 0;
 	float dx = 0.01;
 
 	for( int i=0; i<N ; ++i)
 	{
-#ifdef	REJECT
 		do {
-#endif
-
-			x = L * (1.0f - 2.0f * mr.myrand());
-            y = L * (1.0f - 2.0f * mr.myrand());
-            z = L * (1.0f - 2.0f * mr.myrand());
-            p = mr.myrand();
+			x = mr.myrand();
+            y = mr.myrand();
+            z = mr.myrand();
+            p = mr2.myrand();
 
 			pp = prob1s(x / L,y / L ,z / L);	//ここを見たい波動関数に変える
 			a = (pp>0) - (pp<0);
-			pp *= pp;
+			//pp *= pp;
 			nn++;
 			sum += pp;
-#ifdef	REJECT
-		} while( p >= pp );
-#endif
+		} while( pp < p );
+
 		vertices[i].Pos.x = x;
 		vertices[i].Pos.y = y;
 		vertices[i].Pos.z = z;
 
-#ifdef	REJECT
 		vertices[i].Col.r = a > 0.0f ? 0.8f : 0.0f;
 		vertices[i].Col.b = 0.8f;
 		vertices[i].Col.g = a < 0.0f ? 0.8f : 0.0f;
 		vertices[i].Col.a = 1.0f;
-#endif
 		ofs <<  x << "," << y << "," << z <<  std::endl;
 /*
 		px = (prob2s(x + dx, y, z ) - pp) / dx / pp; 
@@ -148,23 +141,6 @@ HRESULT TDXHydrogenScene::Init(ID3D10Device* pd3dDevice)
 */
 		if ( maxpp < pp)
 			maxpp = pp;
-
-#ifndef	REJECT
-		if( p < pp )
-		{
-			vertices[i].Col.r = 0.8f;
-			vertices[i].Col.g = 0.8f;
-			vertices[i].Col.b = 0.0f;
-			vertices[i].Col.a = 1.0f;
-		}
-		else
-		{
-			vertices[i].Col.r = 0.0f;
-			vertices[i].Col.g = 0.0f;
-			vertices[i].Col.b = 0.0f;
-			vertices[i].Col.a = 0.0f;
-		}
-#endif
 	}
 
 	ofs << -1 << -1 << -1 << std::endl;
