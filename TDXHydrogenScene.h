@@ -2,6 +2,8 @@
 #include "tdxscene.h"
 #include "DXUTcamera.h"
 
+#include "getrmeshandrho/getrmeshandrho.h"
+
 #include "WaveFunctions.h"
 
 #include <d3dx9math.h>
@@ -53,6 +55,9 @@ D3DXVECTOR4                         g_vMeshColor;
 D3DXVECTOR4							g_vLightDir;
 CModelViewerCamera                  g_Camera;               // A model viewing camera
 
-static	const unsigned int N=100000;
+static	const unsigned int N=20000;
+
+private:
+    getrmeshandrho::GetRMeshAndRho const grmar_;
 
 };

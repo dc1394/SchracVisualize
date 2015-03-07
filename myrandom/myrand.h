@@ -28,7 +28,7 @@ namespace myrandom {
             \param min 乱数分布の最小値
             \param max 乱数分布の最大値
         */
-        MyRand(float min, float max);
+        MyRand(double min, double max);
 
         //! A destructor.
         /*!
@@ -64,7 +64,7 @@ namespace myrandom {
         /*!
             乱数の分布
         */
-        std::uniform_real_distribution<float> distribution_;
+        std::uniform_real_distribution<double> distribution_;
         
         //! A private member variable.
         /*!

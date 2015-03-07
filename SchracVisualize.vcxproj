@@ -150,7 +150,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions> %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>d3dx10d.lib;d3dx9d.lib;dxerr.lib;dxguid.lib;winmm.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3dx10d.lib;d3dx9d.lib;dxerr.lib;dxguid.lib;winmm.lib;comctl32.lib;gsl.lib;cblas.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <LargeAddressAware>true</LargeAddressAware>
@@ -385,13 +385,17 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="DxClassTest.cpp" />
+    <ClCompile Include="getrmeshandrho\getrmeshandrho.cpp" />
+    <ClCompile Include="getrmeshandrho\readdatafile.cpp" />
     <ClCompile Include="myrandom\myrand.cpp" />
-    <ClCompile Include="readdatafile.cpp" />
     <ClCompile Include="TDXHydrogenScene.cpp" />
     <ClCompile Include="TDXScene.cpp" />
     <ClCompile Include="WaveFunctions.cpp" />
+    <ClInclude Include="getrmeshandrho\deleter.h" />
+    <ClInclude Include="getrmeshandrho\getrmeshandrho.h" />
+    <ClInclude Include="getrmeshandrho\property.h" />
+    <ClInclude Include="getrmeshandrho\readdatafile.h" />
     <ClInclude Include="myrandom\myrand.h" />
-    <ClInclude Include="readdatafile.h" />
     <ClInclude Include="TDXHydrogenScene.h" />
     <ClInclude Include="TDXScene.h" />
     <ClInclude Include="WaveFunctions.h" />

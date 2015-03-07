@@ -9,7 +9,7 @@
 #include <boost/range/algorithm.hpp>    // for boost::generate
 
 namespace myrandom {
-    MyRand::MyRand(float min, float max) :
+    MyRand::MyRand(double min, double max) :
         distribution_(min, max)
     {
         // ランダムデバイス
@@ -21,7 +21,9 @@ namespace myrandom {
         // ベクタの初期化
         boost::generate(v, std::ref(rnd));
         
+        std::seed_seq seq(v.begin(), v.end());
+
         // 乱数エンジン
-        randengine_ = std::mt19937(std::seed_seq(v.begin(), v.end()));
+        randengine_ = std::mt19937(seq);
     }
 }

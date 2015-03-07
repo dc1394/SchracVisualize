@@ -3,14 +3,10 @@
 #include "resource.h"
 #include "myrandom/myrand.h"
 
-
 #include "TDXHydrogenScene.h"
 
 #define _USE_MATH_DEFINES
 #include <math.h>
-
-#include <stdlib.h>    // rand, srandégóp
-#include <time.h>     // timeégóp
 
 
 #include <iostream>
@@ -33,8 +29,10 @@ g_pViewVariable(NULL),
 g_pProjectionVariable(NULL),
 g_pMeshColorVariable(NULL),
 g_pLightDirVariable(NULL),
-g_vMeshColor( 0.7f, 0.7f, 0.7f, 1.0f )
+g_vMeshColor( 0.7f, 0.7f, 0.7f, 1.0f ),
+grmar_("rho_H_1s.csv")
 {
+
 }
 
 TDXHydrogenScene::~TDXHydrogenScene(void)
@@ -98,55 +96,61 @@ HRESULT TDXHydrogenScene::Init(ID3D10Device* pd3dDevice)
     // Create vertex buffer
     std::vector<SimpleVertex2> vertices(N);
 
-	std::ofstream	ofs("calc_log.txt");
+	//std::ofstream	ofs("calc_log.txt");
 	
-    myrandom::MyRand mr(-3.0, 3.0);
-    myrandom::MyRand mr2(0.0, 4.0 * std::exp(-2.0));
+    myrandom::MyRand mr(-5.0, 5.0);
+    myrandom::MyRand mr2(0.0, grmar_.Rhomax + 0.1);
 
-	float	x,y,z, p , pp ,a ,sum = 0.0f, px, py ,pz;
-	const float L = 0.3f;
-	float maxpp = 0.0f;
-	int nn = 0;
-	float dx = 0.01;
+	auto const L = 0.3f;
 
 	for( int i=0; i<N ; ++i)
 	{
+        double x, y, z, p, pp, a;
+        
 		do {
 			x = mr.myrand();
             y = mr.myrand();
             z = mr.myrand();
+
+            auto const rmin = grmar_.R_meshmin();
+            if (std::fabs(x) < rmin || std::fabs(y) < rmin || std::fabs(z) < rmin) {
+                continue;
+            }
+
             p = mr2.myrand();
 
-			pp = prob1s(x / L,y / L ,z / L);	//Ç±Ç±Çå©ÇΩÇ¢îgìÆä÷êîÇ…ïœÇ¶ÇÈ
-			a = (pp>0) - (pp<0);
+            auto const r = std::sqrt((x / L) * (x / L) + (y / L) * (y / L) + (z / L) * (z / L));
+            pp = static_cast<float>(grmar_(r));
+            //prob1s(x / L,y / L ,z / L);	//Ç±Ç±Çå©ÇΩÇ¢îgìÆä÷êîÇ…ïœÇ¶ÇÈ
+			a = (pp > 0.0) - (pp < 0.0);
 			//pp *= pp;
-			nn++;
-			sum += pp;
-		} while( pp < p );
+			//nn++;
+			//sum += pp;
+		} while (pp < p);
 
-		vertices[i].Pos.x = x;
-		vertices[i].Pos.y = y;
-		vertices[i].Pos.z = z;
+		vertices[i].Pos.x = static_cast<float>(x);
+        vertices[i].Pos.y = static_cast<float>(y);
+        vertices[i].Pos.z = static_cast<float>(z);
 
-		vertices[i].Col.r = a > 0.0f ? 0.8f : 0.0f;
+		vertices[i].Col.r = a > 0.0 ? 0.8f : 0.0f;
 		vertices[i].Col.b = 0.8f;
-		vertices[i].Col.g = a < 0.0f ? 0.8f : 0.0f;
+		vertices[i].Col.g = a < 0.0 ? 0.8f : 0.0f;
 		vertices[i].Col.a = 1.0f;
-		ofs <<  x << "," << y << "," << z <<  std::endl;
+		//ofs <<  x << "," << y << "," << z <<  std::endl;
 /*
 		px = (prob2s(x + dx, y, z ) - pp) / dx / pp; 
 		py = (prob2s(x, y + dx, z ) - pp) / dx / pp; 
 		pz = (prob2s(x, y, z + dx ) - pp) / dx / pp; 
 		ofs <<  px << "," << py << "," << pz << "," << (x*px+y*py+z*pz) /sqrt((x*x+y*y+z*z)*(px*px+py*py+pz*pz)) <<   std::endl;
 */
-		if ( maxpp < pp)
-			maxpp = pp;
+		//if ( maxpp < pp)
+		//	maxpp = pp;
 	}
 
-	ofs << -1 << -1 << -1 << std::endl;
+	/*ofs << -1 << -1 << -1 << std::endl;
 	ofs << "maxpp = " << maxpp << std::endl;
 	ofs << "nn = " << nn << ", ave = " << sum / nn << std::endl;
-	ofs.close();
+	ofs.close();*/
 
     D3D10_BUFFER_DESC bd;
     bd.Usage = D3D10_USAGE_DEFAULT;
