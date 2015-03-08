@@ -2,17 +2,12 @@
 #include "DXUTmisc.h"
 #include "resource.h"
 #include "myrandom/myrand.h"
-
 #include "TDXHydrogenScene.h"
 
-#define _USE_MATH_DEFINES
-#include <math.h>
-
-
-#include <iostream>
-#include <fstream>
-#include <iomanip>
-#include <vector>
+#include <array>                    // for std::array
+#include <system_error>             // for std::system_category
+#include <vector>                   // for std::vector
+#include <gsl/gsl_sf_legendre.h>    // for gsl_sf_legendre_sphPlm
 
 #define USE_CAMERA 1	//DXUTのCameraクラスを使うかどうか
 
@@ -30,7 +25,7 @@ g_pProjectionVariable(NULL),
 g_pMeshColorVariable(NULL),
 g_pLightDirVariable(NULL),
 g_vMeshColor( 0.7f, 0.7f, 0.7f, 1.0f ),
-grmar_("rho_H_1s.csv")
+grmar_(MyOpenFile())
 {
 
 }
@@ -101,11 +96,13 @@ HRESULT TDXHydrogenScene::Init(ID3D10Device* pd3dDevice)
     myrandom::MyRand mr(-5.0, 5.0);
     myrandom::MyRand mr2(0.0, grmar_.Rhomax + 0.1);
 
-	auto const L = 0.3f;
+    auto const L = 0.3f;
 
-	for( int i=0; i<N ; ++i)
+    for (auto & ver : vertices)
 	{
-        double x, y, z, p, pp, a;
+        auto sign = 0;
+        auto p = 0.0, pp = 0.0;
+        double x, y, z;
         
 		do {
 			x = mr.myrand();
@@ -120,22 +117,23 @@ HRESULT TDXHydrogenScene::Init(ID3D10Device* pd3dDevice)
             p = mr2.myrand();
 
             auto const r = std::sqrt((x / L) * (x / L) + (y / L) * (y / L) + (z / L) * (z / L));
-            pp = static_cast<float>(grmar_(r));
+            auto const ylm = gsl_sf_legendre_sphPlm(1, 0, z / r);
+            pp = static_cast<float>(grmar_(r) * ylm * ylm);
             //prob1s(x / L,y / L ,z / L);	//ここを見たい波動関数に変える
-			a = (pp > 0.0) - (pp < 0.0);
+			sign = (pp > 0.0) - (pp < 0.0);
 			//pp *= pp;
 			//nn++;
 			//sum += pp;
 		} while (pp < p);
 
-		vertices[i].Pos.x = static_cast<float>(x);
-        vertices[i].Pos.y = static_cast<float>(y);
-        vertices[i].Pos.z = static_cast<float>(z);
-
-		vertices[i].Col.r = a > 0.0 ? 0.8f : 0.0f;
-		vertices[i].Col.b = 0.8f;
-		vertices[i].Col.g = a < 0.0 ? 0.8f : 0.0f;
-		vertices[i].Col.a = 1.0f;
+		ver.Pos.x = static_cast<float>(x);
+        ver.Pos.y = static_cast<float>(y);
+        ver.Pos.z = static_cast<float>(z);
+           
+		ver.Col.r = sign > 0 ? 0.8f : 0.0f;
+		ver.Col.b = 0.8f;
+		ver.Col.g = sign < 0 ? 0.8f : 0.0f;
+		ver.Col.a = 1.0f;
 		//ofs <<  x << "," << y << "," << z <<  std::endl;
 /*
 		px = (prob2s(x + dx, y, z ) - pp) / dx / pp; 
@@ -290,4 +288,58 @@ HRESULT TDXHydrogenScene::MsgPrc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 #endif
 }
 
+// ファイルを開く関数
+std::string MyOpenFile()
+{
+    // ファイルを開く
+    static std::array<wchar_t, MAX_PATH> filename_full;   // ファイル名(フルパス)を受け取る領域
+    static std::array<wchar_t, MAX_PATH> filename;        // ファイル名を受け取る領域
 
+    do {
+        if (ShowFileDialog(NULL, filename_full.data(), filename.data(), L"ファイルを開く", L"csv")) {
+            break;
+        }
+
+        ::MessageBox(NULL, L"ファイルを選択してください", L"エラー", MB_OK | MB_ICONWARNING);
+    } while (true);
+
+    return my_wcstombs(filename_full);
+}
+
+// ファイル選択ダイアログを出す関数
+BOOL ShowFileDialog(HWND hWnd, wchar_t * filepath, wchar_t * filename, wchar_t const * title, wchar_t const * deffile)
+{
+    OPENFILENAME ofn = {0};
+
+    // 構造体に情報をセット
+    ofn.lStructSize = sizeof(ofn);			                                    // 構造体のサイズ
+    ofn.hwndOwner = hWnd;					                                    // コモンダイアログの親ウィンドウハンドル
+    ofn.lpstrFilter = L"Data out files(*.csv)\0*.csv\0All files(*.*)\0*.*\0\0"; // ファイルの種類
+    ofn.lpstrFile = filepath;				                                    // 選択されたファイル名(フルパス)を受け取る変数のアドレス
+    ofn.lpstrFileTitle = filename;			                                    // 選択されたファイル名を受け取る変数のアドレス
+    ofn.nMaxFile = MAX_PATH;				                                    // lpstrFileに指定した変数のサイズ
+    ofn.nMaxFileTitle = MAX_PATH;			                                    // lpstrFileTitleに指定した変数のサイズ
+    ofn.Flags = OFN_FILEMUSTEXIST;			                                    // フラグ指定
+    ofn.lpstrTitle = title;					                                    // コモンダイアログのキャプション
+    ofn.lpstrDefExt = deffile;				                                    // デフォルトのファイルの種類
+
+    // ファイルを開くコモンダイアログを作成
+    return ::GetOpenFileName(&ofn);
+}
+
+std::string my_wcstombs(std::array<wchar_t, MAX_PATH> const & wcs, std::int32_t codeMulti)
+{
+    // マルチバイト変換後のサイズを調べる
+    auto const sizeMulti = ::WideCharToMultiByte(codeMulti, 0, wcs.data(), -1, nullptr, 0, nullptr, nullptr);
+    if (!sizeMulti) {
+        // 失敗
+        throw std::system_error(std::error_code(::GetLastError(), std::system_category()));
+    }
+
+    std::array<char, MAX_PATH> mbs;
+
+    // マルチバイトに変換
+    ::WideCharToMultiByte(codeMulti, 0, wcs.data(), -1, mbs.data(), sizeMulti, nullptr, nullptr);
+    
+    return std::string(mbs.data());
+}

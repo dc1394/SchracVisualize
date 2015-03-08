@@ -6,6 +6,9 @@
 
 #include "WaveFunctions.h"
 
+#include <array>        // for std::array
+#include <cstdint>      // for std::int32_t
+#include <string>       // for std::string
 #include <d3dx9math.h>
 //--------------------------------------------------------------------------------------
 // Structures
@@ -61,3 +64,7 @@ private:
     getrmeshandrho::GetRMeshAndRho const grmar_;
 
 };
+
+std::string MyOpenFile();
+BOOL ShowFileDialog(HWND hWnd, wchar_t * filepath, wchar_t * filename, wchar_t const * title, wchar_t const * deffile);
+std::string my_wcstombs(std::array<wchar_t, MAX_PATH> const & wcs, std::int32_t codeMulti = CP_ACP);
