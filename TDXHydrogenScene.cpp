@@ -4,10 +4,13 @@
 #include "myrandom/myrand.h"
 #include "TDXHydrogenScene.h"
 
-#include <array>                    // for std::array
-#include <system_error>             // for std::system_category
-#include <vector>                   // for std::vector
-#include <gsl/gsl_sf_legendre.h>    // for gsl_sf_legendre_sphPlm
+#include <array>                        // for std::array
+#include <system_error>                 // for std::system_category
+#include <vector>                       // for std::vector
+#include <tbb/parallel_for.h>           // for tbb::parallel_for
+#include <tbb/partitioner.h>            // for tbb::auto_partitioner
+#include <tbb/task_scheduler_init.h>    // for tbb::task_scheduler_init
+#include <gsl/gsl_sf_legendre.h>        // for gsl_sf_legendre_sphPlm
 
 #define USE_CAMERA 1	//DXUT‚ÌCameraƒNƒ‰ƒX‚ðŽg‚¤‚©‚Ç‚¤‚©
 
@@ -39,7 +42,49 @@ TDXHydrogenScene::~TDXHydrogenScene(void)
     SAFE_RELEASE( g_pEffect );
 }
 
+void TDXHydrogenScene::FillSimpleVertex2(SimpleVertex2 & ver)
+{
+    auto const L = 0.3f;
 
+    auto sign = 0;
+    auto p = 0.0, pp = 0.0;
+    double x, y, z;
+
+    using namespace myrandom;
+    MyRand mr(-5.0, 5.0);
+    MyRand mr2(0.0, grmar_.Rhomax + 0.1);
+
+    do {
+        x = mr.myrand();
+        y = mr.myrand();
+        z = mr.myrand();
+
+        auto const rmin = grmar_.R_meshmin();
+        if (std::fabs(x) < rmin || std::fabs(y) < rmin || std::fabs(z) < rmin) {
+            continue;
+        }
+
+        p = mr2.myrand();
+
+        auto const r = std::sqrt((x / L) * (x / L) + (y / L) * (y / L) + (z / L) * (z / L));
+        auto const ylm = gsl_sf_legendre_sphPlm(1, 0, z / r);
+        pp = static_cast<float>(grmar_(r) * ylm * ylm);
+        //prob1s(x / L,y / L ,z / L);	//‚±‚±‚ðŒ©‚½‚¢”g“®ŠÖ”‚É•Ï‚¦‚é
+        sign = (pp > 0.0) - (pp < 0.0);
+        //pp *= pp;
+        //nn++;
+        //sum += pp;
+    } while (pp < p);
+
+    ver.Pos.x = static_cast<float>(x);
+    ver.Pos.y = static_cast<float>(y);
+    ver.Pos.z = static_cast<float>(z);
+
+    ver.Col.r = sign > 0 ? 0.8f : 0.0f;
+    ver.Col.b = 0.8f;
+    ver.Col.g = sign < 0 ? 0.8f : 0.0f;
+    ver.Col.a = 1.0f;
+}
 
 
 HRESULT TDXHydrogenScene::Init(ID3D10Device* pd3dDevice)
@@ -91,64 +136,14 @@ HRESULT TDXHydrogenScene::Init(ID3D10Device* pd3dDevice)
     // Create vertex buffer
     std::vector<SimpleVertex2> vertices(N);
 
-	//std::ofstream	ofs("calc_log.txt");
-	
-    myrandom::MyRand mr(-5.0, 5.0);
-    myrandom::MyRand mr2(0.0, grmar_.Rhomax + 0.1);
+    tbb::task_scheduler_init init;
 
-    auto const L = 0.3f;
-
-    for (auto & ver : vertices)
-	{
-        auto sign = 0;
-        auto p = 0.0, pp = 0.0;
-        double x, y, z;
-        
-		do {
-			x = mr.myrand();
-            y = mr.myrand();
-            z = mr.myrand();
-
-            auto const rmin = grmar_.R_meshmin();
-            if (std::fabs(x) < rmin || std::fabs(y) < rmin || std::fabs(z) < rmin) {
-                continue;
-            }
-
-            p = mr2.myrand();
-
-            auto const r = std::sqrt((x / L) * (x / L) + (y / L) * (y / L) + (z / L) * (z / L));
-            auto const ylm = gsl_sf_legendre_sphPlm(1, 0, z / r);
-            pp = static_cast<float>(grmar_(r) * ylm * ylm);
-            //prob1s(x / L,y / L ,z / L);	//‚±‚±‚ðŒ©‚½‚¢”g“®ŠÖ”‚É•Ï‚¦‚é
-			sign = (pp > 0.0) - (pp < 0.0);
-			//pp *= pp;
-			//nn++;
-			//sum += pp;
-		} while (pp < p);
-
-		ver.Pos.x = static_cast<float>(x);
-        ver.Pos.y = static_cast<float>(y);
-        ver.Pos.z = static_cast<float>(z);
-           
-		ver.Col.r = sign > 0 ? 0.8f : 0.0f;
-		ver.Col.b = 0.8f;
-		ver.Col.g = sign < 0 ? 0.8f : 0.0f;
-		ver.Col.a = 1.0f;
-		//ofs <<  x << "," << y << "," << z <<  std::endl;
-/*
-		px = (prob2s(x + dx, y, z ) - pp) / dx / pp; 
-		py = (prob2s(x, y + dx, z ) - pp) / dx / pp; 
-		pz = (prob2s(x, y, z + dx ) - pp) / dx / pp; 
-		ofs <<  px << "," << py << "," << pz << "," << (x*px+y*py+z*pz) /sqrt((x*x+y*y+z*z)*(px*px+py*py+pz*pz)) <<   std::endl;
-*/
-		//if ( maxpp < pp)
-		//	maxpp = pp;
-	}
-
-	/*ofs << -1 << -1 << -1 << std::endl;
-	ofs << "maxpp = " << maxpp << std::endl;
-	ofs << "nn = " << nn << ", ave = " << sum / nn << std::endl;
-	ofs.close();*/
+    tbb::parallel_for(
+        std::uint32_t(0),
+        N,
+        std::uint32_t(1),
+        [this, &vertices](std::uint32_t i) { FillSimpleVertex2(vertices[i]); },
+        tbb::auto_partitioner());
 
     D3D10_BUFFER_DESC bd;
     bd.Usage = D3D10_USAGE_DEFAULT;
