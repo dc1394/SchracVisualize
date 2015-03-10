@@ -22,7 +22,8 @@ namespace getdata {
         L([this] { return l_; }, nullptr),
         N([this] { return n_; }, nullptr),
         Orbital([this] { return orbital_; }, nullptr),
-        Rhomax([this] { return rhomax_; }, nullptr),
+        Phimax([this] { return phimax_; }, nullptr),
+        Phimin([this] { return phimin_; }, nullptr),
         R_meshmin([this] { return r_meshmin_; }, nullptr),
         acc_(gsl_interp_accel_alloc(), gsl_interp_accel_deleter)
     {
@@ -76,18 +77,23 @@ namespace getdata {
             break;
         }
 
-        std::vector<double> r_mesh, rho;
-        std::tie(r_mesh, rho) = ReadDataFile().readdatafile(filename);
+        std::vector<double> r_mesh, phi;
+        std::tie(r_mesh, phi) = ReadDataFile().readdatafile(filename);
         
-        BOOST_ASSERT(r_mesh.size() == rho.size());
+        BOOST_ASSERT(r_mesh.size() == phi.size());
 
-        rhomax_ = *boost::max_element(rho);
+        phimax_ = *boost::max_element(phi);
+        
+        std::vector<double> temp(phi);
+        boost::for_each(temp, [](double & v) { v = v > 0.0 ? 0.0 : -v; });
+        phimin_ = -*boost::max_element(temp);
+        
         r_meshmin_ = r_mesh[0];
 
         spline_ = std::unique_ptr<gsl_spline, decltype(gsl_spline_deleter)>(
             gsl_spline_alloc(gsl_interp_cspline, r_mesh.size()), gsl_spline_deleter);
 
-        gsl_spline_init(spline_.get(), r_mesh.data(), rho.data(), r_mesh.size());
+        gsl_spline_init(spline_.get(), r_mesh.data(), phi.data(), r_mesh.size());
     }
 
     // #endregion コンストラクタ

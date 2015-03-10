@@ -79,9 +79,15 @@ namespace getdata {
 
         //! A property.
         /*!
-            電子密度ρ(r)の最大値のプロパティ
+            固有関数φ(r)の最大値のプロパティ
         */
-        Property<double> const Rhomax;
+        Property<double> const Phimax;
+
+        //! A property.
+        /*!
+            固有関数φ(r)の最小値のプロパティ
+        */
+        Property<double> const Phimin;
 
         //! A property.
         /*!
@@ -126,9 +132,15 @@ namespace getdata {
 
         //!  A public member variable.
         /*!
-            電子密度ρ(r)の最大値
+            固有関数φ(r)の最大値
         */
-        double rhomax_;
+        double phimax_;
+        
+        //!  A public member variable.
+        /*!
+            固有関数φ(r)の最小値
+        */
+        double phimin_;
 
         //!  A public member variable.
         /*!

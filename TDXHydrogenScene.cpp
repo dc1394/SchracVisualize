@@ -4,13 +4,14 @@
 #include "myrandom/myrand.h"
 #include "TDXHydrogenScene.h"
 
-#include <array>                        // for std::array
-#include <system_error>                 // for std::system_category
-#include <vector>                       // for std::vector
-#include <tbb/parallel_for.h>           // for tbb::parallel_for
-#include <tbb/partitioner.h>            // for tbb::auto_partitioner
-#include <tbb/task_scheduler_init.h>    // for tbb::task_scheduler_init
-#include <gsl/gsl_sf_legendre.h>        // for gsl_sf_legendre_sphPlm
+#include <array>                                                // for std::array
+#include <system_error>                                         // for std::system_category
+#include <vector>                                               // for std::vector
+#include <boost/math/special_functions/spherical_harmonic.hpp>  // for boost::math::spherical_harmonic
+#include <tbb/parallel_for.h>                                   // for tbb::parallel_for
+#include <tbb/partitioner.h>                                    // for tbb::auto_partitioner
+#include <tbb/task_scheduler_init.h>                            // for tbb::task_scheduler_init
+#include <gsl/gsl_sf_legendre.h>                                
 
 #define USE_CAMERA 1	//DXUT‚ÌCameraƒNƒ‰ƒX‚ðŽg‚¤‚©‚Ç‚¤‚©
 
@@ -44,8 +45,6 @@ TDXHydrogenScene::~TDXHydrogenScene(void)
 
 void TDXHydrogenScene::FillSimpleVertex2(SimpleVertex2 & ver)
 {
-    auto const L = 0.3f;
-
     auto sign = 0;
     auto p = 0.0, pp = 0.0;
     double x, y, z;
@@ -55,7 +54,7 @@ void TDXHydrogenScene::FillSimpleVertex2(SimpleVertex2 & ver)
     auto const n = static_cast<double>(gd_.N);
     auto const rmax = (2.3622 * n + 3.3340) * n + 1.3228;
     MyRand mr(-rmax, rmax); 
-    MyRand mr2(0.0, gd_.Rhomax);
+    MyRand mr2(gd_.Phimin, gd_.Phimax);
 
     do {
         x = mr.myrand();
@@ -69,11 +68,12 @@ void TDXHydrogenScene::FillSimpleVertex2(SimpleVertex2 & ver)
 
         p = mr2.myrand();
 
-        auto const r = std::sqrt((x / L) * (x / L) + (y / L) * (y / L) + (z / L) * (z / L));
-        auto const ylm = gsl_sf_legendre_sphPlm(gd_.L + 2, 1, z / r);
-        pp = static_cast<float>(gd_(r) * ylm * ylm);
+        auto const r = std::sqrt(x * x + y * y + z * z);
+        auto const phi = std::acos(x / std::sqrt(x * x + y * y));
+        auto const ylm = boost::math::spherical_harmonic(gd_.L, 1, std::acos(z / r), phi).imag();
+        pp = static_cast<float>(gd_(r) * ylm);
         sign = (pp > 0.0) - (pp < 0.0);
-    } while (pp < p);
+    } while (std::fabs(pp) < std::fabs(p));
 
     ver.Pos.x = static_cast<float>(x);
     ver.Pos.y = static_cast<float>(y);
@@ -170,7 +170,7 @@ HRESULT TDXHydrogenScene::Init(ID3D10Device* pd3dDevice)
 
     // Initialize the view matrix
 #ifdef	USE_CAMERA
-    D3DXVECTOR3 Eye( 0.0f, 3.0f, -6.0f );
+    D3DXVECTOR3 Eye( 0.0f, 30.0f, -30.0f );
     D3DXVECTOR3 At( 0.0f, 0.0f, 0.0f );
 //    D3DXVECTOR3 Eye( 0.0f, 0.0f, -800.0f );
 //    D3DXVECTOR3 At( 0.0f, 0.0f, 0.0f );

@@ -72,7 +72,7 @@ private:
     /*!
         電子のサンプル点
     */
-    static std::size_t const N = 10000;
+    static std::size_t const N = 80000;
 
 protected:
     // !A protected member variable.
