@@ -11,7 +11,7 @@
 #include <stdexcept>                    // for std::runtime_error
 #include <boost/algorithm/string.hpp>   // for boost::algorithm
 
-namespace getrmeshandrho {
+namespace getdata {
     ReadDataFile::mypair ReadDataFile::readdatafile(std::string const & filename) const
     {
         std::ifstream ifs(filename);

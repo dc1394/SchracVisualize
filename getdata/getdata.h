@@ -1,4 +1,4 @@
-﻿/*! \file getrmeshandrho.h
+﻿/*! \file getdata.h
     \brief rのメッシュと、そのメッシュにおける電子密度を与えるクラスの宣言
 
 Copyright © 2015 @dc1394 All Rights Reserved.
@@ -11,15 +11,16 @@ Copyright © 2015 @dc1394 All Rights Reserved.
 
 #include "deleter.h"
 #include "property.h"
+#include <cstdint>      // for std::uint8_t
 #include <memory>       // for std::unique_ptr
 #include <string>       // for std::string
 
-namespace getrmeshandrho {
+namespace getdata {
     //! A class.
     /*!
         rのメッシュと、そのメッシュにおける動径波動関数を与えるクラス
     */
-    class GetRMeshAndRho final {
+    class GetData final {
         // #region コンストラクタ・デストラクタ
 
     public:
@@ -28,13 +29,13 @@ namespace getrmeshandrho {
             唯一のコンストラクタ
             \param filename rのメッシュと、そのメッシュにおける電子密度が記録されたデータファイル名
         */
-        GetRMeshAndRho(std::string const & filename);
+        GetData(std::string const & filename);
 
         //! A destructor.
         /*!
             デフォルトデストラクタ
         */
-        ~GetRMeshAndRho() = default;
+        ~GetData() = default;
 
         // #endregion コンストラクタ・デストラクタ
 
@@ -51,6 +52,30 @@ namespace getrmeshandrho {
         // #endregion メンバ関数
         
         // #region プロパティ
+
+        //!  A property.
+        /*!
+            元素名
+        */
+        Property<std::string> Atomname;
+
+        //!  A property.
+        /*!
+            方位量子数
+        */
+        Property<std::int32_t> L;
+
+        //!  A property.
+        /*!
+            主量子数
+        */
+        Property<std::int32_t> N;
+
+        //!  A property.
+        /*!
+            軌道
+        */
+        Property<std::string> Orbital;
 
         //! A property.
         /*!
@@ -74,6 +99,30 @@ namespace getrmeshandrho {
             gsl_interp_accelへのスマートポインタ
         */
         std::unique_ptr<gsl_interp_accel, decltype(gsl_interp_accel_deleter)> const acc_;
+
+        //!  A public member variable.
+        /*!
+            元素名
+        */
+        std::string atomname_;
+        
+        //!  A public member variable.
+        /*!
+        方位量子数
+        */
+        std::int32_t l_;
+
+        //!  A public member variable.
+        /*!
+            主量子数
+        */
+        std::int32_t n_;
+
+        //!  A public member variable.
+        /*!
+            軌道
+        */
+        std::string orbital_;
 
         //!  A public member variable.
         /*!
@@ -101,13 +150,13 @@ namespace getrmeshandrho {
         /*!
             デフォルトコンストラクタ（禁止）
         */
-        GetRMeshAndRho() = delete;
+        GetData() = delete;
 
         //! A private copy constructor (deleted).
         /*!
             コピーコンストラクタ（禁止）
         */
-        GetRMeshAndRho(GetRMeshAndRho const &) = delete;
+        GetData(GetData const &) = delete;
 
         //! A private member function (deleted).
         /*!
@@ -115,7 +164,7 @@ namespace getrmeshandrho {
             \param コピー元のオブジェクト（未使用）
             \return コピー元のオブジェクト
         */
-        GetRMeshAndRho & operator=(GetRMeshAndRho const &) = delete;
+        GetData & operator=(GetData const &) = delete;
 
         // #endregion 禁止されたコンストラクタ・メンバ関数
     };

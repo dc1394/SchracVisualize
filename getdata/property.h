@@ -13,7 +13,7 @@
 #include <functional>   // for std::function
 #include <utility>      // for std::move
 
-namespace getrmeshandrho {
+namespace getdata {
     template <typename T>
     //! A template class.
     /*!

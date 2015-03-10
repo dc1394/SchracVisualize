@@ -15,7 +15,7 @@
     <Filter Include="myrandom">
       <UniqueIdentifier>{d87870d2-0a83-43d4-bb3e-393d795712f5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="getrmeshandrho">
+    <Filter Include="getdata">
       <UniqueIdentifier>{ae52d785-71a4-4794-ac38-da4edbd16fb9}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -86,36 +86,34 @@
     <ClCompile Include="EmptyProject9.cpp" />
     <ClCompile Include="TDXHydrogenScene.cpp" />
     <ClCompile Include="TDXScene.cpp" />
-    <ClCompile Include="WaveFunctions.cpp" />
     <ClCompile Include="DxClassTest.cpp" />
-    <ClCompile Include="getrmeshandrho\readdatafile.cpp">
-      <Filter>getrmeshandrho</Filter>
-    </ClCompile>
-    <ClCompile Include="getrmeshandrho\getrmeshandrho.cpp">
-      <Filter>getrmeshandrho</Filter>
-    </ClCompile>
     <ClCompile Include="myrandom\myrand.cpp">
       <Filter>myrandom</Filter>
+    </ClCompile>
+    <ClCompile Include="getdata\getdata.cpp">
+      <Filter>getdata</Filter>
+    </ClCompile>
+    <ClCompile Include="getdata\readdatafile.cpp">
+      <Filter>getdata</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TDXHydrogenScene.h" />
     <ClInclude Include="TDXScene.h" />
-    <ClInclude Include="WaveFunctions.h" />
-    <ClInclude Include="getrmeshandrho\readdatafile.h">
-      <Filter>getrmeshandrho</Filter>
-    </ClInclude>
-    <ClInclude Include="getrmeshandrho\getrmeshandrho.h">
-      <Filter>getrmeshandrho</Filter>
-    </ClInclude>
-    <ClInclude Include="getrmeshandrho\deleter.h">
-      <Filter>getrmeshandrho</Filter>
-    </ClInclude>
-    <ClInclude Include="getrmeshandrho\property.h">
-      <Filter>getrmeshandrho</Filter>
-    </ClInclude>
     <ClInclude Include="myrandom\myrand.h">
       <Filter>myrandom</Filter>
+    </ClInclude>
+    <ClInclude Include="getdata\deleter.h">
+      <Filter>getdata</Filter>
+    </ClInclude>
+    <ClInclude Include="getdata\getdata.h">
+      <Filter>getdata</Filter>
+    </ClInclude>
+    <ClInclude Include="getdata\property.h">
+      <Filter>getdata</Filter>
+    </ClInclude>
+    <ClInclude Include="getdata\readdatafile.h">
+      <Filter>getdata</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

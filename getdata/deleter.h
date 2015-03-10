@@ -13,7 +13,7 @@
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_spline.h>
 
-namespace getrmeshandrho {
+namespace getdata {
     //! A function.
     /*!
         gsl_interp_accelへのポインタを解放するラムダ式

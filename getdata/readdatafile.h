@@ -13,7 +13,7 @@
 #include <utility>  // for std::pair
 #include <vector>   // for std::vector
 
-namespace getrmeshandrho {
+namespace getdata {
     //! A class.
     /*!
         電子密度のデータファイルを読み込むクラス

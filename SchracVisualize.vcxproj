@@ -385,20 +385,18 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="DxClassTest.cpp" />
-    <ClCompile Include="getrmeshandrho\getrmeshandrho.cpp" />
-    <ClCompile Include="getrmeshandrho\readdatafile.cpp" />
+    <ClCompile Include="getdata\getdata.cpp" />
+    <ClCompile Include="getdata\readdatafile.cpp" />
     <ClCompile Include="myrandom\myrand.cpp" />
     <ClCompile Include="TDXHydrogenScene.cpp" />
     <ClCompile Include="TDXScene.cpp" />
-    <ClCompile Include="WaveFunctions.cpp" />
-    <ClInclude Include="getrmeshandrho\deleter.h" />
-    <ClInclude Include="getrmeshandrho\getrmeshandrho.h" />
-    <ClInclude Include="getrmeshandrho\property.h" />
-    <ClInclude Include="getrmeshandrho\readdatafile.h" />
+    <ClInclude Include="getdata\deleter.h" />
+    <ClInclude Include="getdata\getdata.h" />
+    <ClInclude Include="getdata\property.h" />
+    <ClInclude Include="getdata\readdatafile.h" />
     <ClInclude Include="myrandom\myrand.h" />
     <ClInclude Include="TDXHydrogenScene.h" />
     <ClInclude Include="TDXScene.h" />
-    <ClInclude Include="WaveFunctions.h" />
     <None Include="DxClassTest.fx" />
     <None Include="SchracVisualize.txt" />
     <None Include="DXUT\Optional\directx.ico" />

@@ -28,7 +28,7 @@ g_pProjectionVariable(NULL),
 g_pMeshColorVariable(NULL),
 g_pLightDirVariable(NULL),
 g_vMeshColor( 0.7f, 0.7f, 0.7f, 1.0f ),
-grmar_(MyOpenFile())
+gd_(MyOpenFile())
 {
 
 }
@@ -51,15 +51,18 @@ void TDXHydrogenScene::FillSimpleVertex2(SimpleVertex2 & ver)
     double x, y, z;
 
     using namespace myrandom;
-    MyRand mr(-5.0, 5.0);
-    MyRand mr2(0.0, grmar_.Rhomax + 0.1);
+
+    auto const n = static_cast<double>(gd_.N);
+    auto const rmax = (2.3622 * n + 3.3340) * n + 1.3228;
+    MyRand mr(-rmax, rmax); 
+    MyRand mr2(0.0, gd_.Rhomax);
 
     do {
         x = mr.myrand();
         y = mr.myrand();
         z = mr.myrand();
 
-        auto const rmin = grmar_.R_meshmin();
+        auto const rmin = gd_.R_meshmin();
         if (std::fabs(x) < rmin || std::fabs(y) < rmin || std::fabs(z) < rmin) {
             continue;
         }
@@ -67,13 +70,9 @@ void TDXHydrogenScene::FillSimpleVertex2(SimpleVertex2 & ver)
         p = mr2.myrand();
 
         auto const r = std::sqrt((x / L) * (x / L) + (y / L) * (y / L) + (z / L) * (z / L));
-        auto const ylm = gsl_sf_legendre_sphPlm(1, 0, z / r);
-        pp = static_cast<float>(grmar_(r) * ylm * ylm);
-        //prob1s(x / L,y / L ,z / L);	//Ç±Ç±Çå©ÇΩÇ¢îgìÆä÷êîÇ…ïœÇ¶ÇÈ
+        auto const ylm = gsl_sf_legendre_sphPlm(gd_.L + 2, 1, z / r);
+        pp = static_cast<float>(gd_(r) * ylm * ylm);
         sign = (pp > 0.0) - (pp < 0.0);
-        //pp *= pp;
-        //nn++;
-        //sum += pp;
     } while (pp < p);
 
     ver.Pos.x = static_cast<float>(x);
@@ -85,7 +84,6 @@ void TDXHydrogenScene::FillSimpleVertex2(SimpleVertex2 & ver)
     ver.Col.g = sign < 0 ? 0.8f : 0.0f;
     ver.Col.a = 1.0f;
 }
-
 
 HRESULT TDXHydrogenScene::Init(ID3D10Device* pd3dDevice)
 {

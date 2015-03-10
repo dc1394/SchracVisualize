@@ -2,9 +2,7 @@
 #include "tdxscene.h"
 #include "DXUTcamera.h"
 
-#include "getrmeshandrho/getrmeshandrho.h"
-
-#include "WaveFunctions.h"
+#include "getdata/getdata.h"
 
 #include <array>        // for std::array
 #include <cstdint>      // for std::int32_t
@@ -111,7 +109,7 @@ private:
     /*!
         rのメッシュと電子密度
     */
-    getrmeshandrho::GetRMeshAndRho const grmar_;
+    getdata::GetData const gd_;
 
 };
 
