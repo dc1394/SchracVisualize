@@ -16,7 +16,6 @@
 
 #include <locale>
 
-
 #define DEG2RAD( a ) ( a * D3DX_PI / 180.f )
 
 //#include "TDXTestScene.h"
@@ -37,6 +36,11 @@ CDXUTTextHelper*                    g_pTxtHelper = NULL;
 
 bool	ROT_FLAG = true;
 
+// !A global variable.
+/*!
+    データオブジェクト
+*/
+std::shared_ptr<getdata::GetData> pgd_;
 
 //--------------------------------------------------------------------------------------
 // UI control IDs
@@ -118,7 +122,10 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdL
 
 	InitApp();
 	
-	DXUTCreateWindow( L"Electron in Hydrogen" );
+    pgd_ = std::make_shared<getdata::GetData>(MyOpenFile());
+    auto const title = "Wavefunction in " + pgd_->Atomname() + " for " + pgd_->Orbital() + " orbital";
+
+	DXUTCreateWindow( my_mbstowcs(title).c_str());
     DXUTCreateDevice( true, 640, 480 );
 //    DXUTCreateDevice( false);
 
@@ -159,7 +166,7 @@ HRESULT CALLBACK OnD3D10CreateDevice( ID3D10Device* pd3dDevice, const DXGI_SURFA
     V_RETURN( D3DX10CreateSprite( pd3dDevice, 512, &g_pSprite ) );
     g_pTxtHelper = new CDXUTTextHelper( NULL, NULL, g_pFont, g_pSprite, 15 );
 
-	scene = new TDXHydrogenScene;
+	scene = new TDXHydrogenScene(pgd_);
 //	scene = new TMomentumScene;
 //	scene = new TDXTestScene;
 	return scene->Init(pd3dDevice);

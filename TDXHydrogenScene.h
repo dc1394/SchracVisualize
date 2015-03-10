@@ -6,6 +6,7 @@
 
 #include <array>        // for std::array
 #include <cstdint>      // for std::int32_t
+#include <memory>       // for std::shared_ptr
 #include <string>       // for std::string
 #include <d3dx9math.h>
 
@@ -36,7 +37,7 @@ public:
     /*!
         唯一のコンストラクタ
     */
-    TDXHydrogenScene();
+    TDXHydrogenScene(std::shared_ptr<getdata::GetData> const & pgd);
 
     //! A destructor.
     /*!
@@ -109,10 +110,47 @@ private:
     /*!
         rのメッシュと電子密度
     */
-    getdata::GetData const gd_;
+    std::shared_ptr<getdata::GetData> const pgd_;
 
 };
 
+// #region 非メンバ関数
+
+// !A function.
+/*!
+    マルチバイト文字列をワイド文字列に変換する
+    \param mbs マルチバイト文字列
+    \param codeMulti マルチバイト文字列のエンコード（デフォルト=932）
+    \return ワイド文字列
+*/
+std::wstring my_mbstowcs(std::string const & mbs, std::int32_t codeMulti = 932);
+
+// !A function.
+/*!
+    ファイルを開く
+    \return ファイル名
+*/
 std::string MyOpenFile();
-BOOL ShowFileDialog(HWND hWnd, wchar_t * filepath, wchar_t * filename, wchar_t const * title, wchar_t const * deffile);
-std::string my_wcstombs(std::array<wchar_t, MAX_PATH> const & wcs, std::int32_t codeMulti = CP_ACP);
+
+// !A function.
+/*!
+    ワイド文字列をマルチバイト文字列に変換する
+    \param wcs ワイド文字列
+    \param codeMulti マルチバイト文字列のエンコード（デフォルト=932）
+    \return マルチバイト文字列
+*/
+std::string my_wcstombs(std::array<wchar_t, MAX_PATH> const & wcs, std::int32_t codeMulti = 932);
+
+// !A function.
+/*!
+    ファイル選択ダイアログを開く
+    \param hWnd ウィンドウハンドル
+    \param filepath ファイルのパス
+    \param filename ファイル名
+    \param title ファイル選択ダイアログのタイトル
+    \param defextension デフォルトのファイルの種類
+    \return ファイル選択ダイアログの戻り値
+*/
+BOOL ShowFileDialog(HWND hWnd, wchar_t * filepath, wchar_t * filename, wchar_t * title, wchar_t * defextension);
+
+// #endregion 非メンバ関数
