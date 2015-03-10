@@ -43,7 +43,7 @@ namespace getdata {
         }
 
         orbital_ = tokens[2][0];
-        n_ = boost::numeric_cast<std::uint8_t>(tokens[2][0] - '0');
+        n_ = static_cast<std::int32_t>(tokens[2][0] - '0');
   
         switch (tokens[2][1]) {
         case 's':
