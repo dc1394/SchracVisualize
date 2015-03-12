@@ -11,7 +11,7 @@ Copyright © 2015 @dc1394 All Rights Reserved.
 
 #include "deleter.h"
 #include "property.h"
-#include <cstdint>      // for std::uint8_t
+#include <cstdint>      // for std::int32_t, std::uint32_t
 #include <memory>       // for std::unique_ptr
 #include <string>       // for std::string
 
@@ -63,7 +63,7 @@ namespace getdata {
         /*!
             方位量子数
         */
-        Property<std::int32_t> L;
+        Property<std::uint32_t> L;
 
         //!  A property.
         /*!
@@ -116,7 +116,7 @@ namespace getdata {
         /*!
         方位量子数
         */
-        std::int32_t l_;
+        std::uint32_t l_;
 
         //!  A public member variable.
         /*!

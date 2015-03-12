@@ -11,23 +11,18 @@
 #include <tbb/parallel_for.h>                                   // for tbb::parallel_for
 #include <tbb/partitioner.h>                                    // for tbb::auto_partitioner
 #include <tbb/task_scheduler_init.h>                            // for tbb::task_scheduler_init
-#include <gsl/gsl_sf_legendre.h>                                
-
-#define USE_CAMERA 1	//DXUT‚ÌCameraƒNƒ‰ƒX‚ðŽg‚¤‚©‚Ç‚¤‚©
-
 
 TDXHydrogenScene::TDXHydrogenScene(std::shared_ptr<getdata::GetData> const & pgd) :
-g_pEffect(NULL),
-g_pVertexLayout(NULL),
-g_pTechnique(NULL),
-g_pVertexBuffer(NULL),
-g_pIndexBuffer(NULL),
-g_pTextureRV(NULL),
-g_pWorldVariable(NULL),
-g_pViewVariable(NULL),
-g_pProjectionVariable(NULL),
-g_pMeshColorVariable(NULL),
-g_pLightDirVariable(NULL),
+//g_pEffect(nullptr),
+g_pVertexLayout(nullptr),
+g_pTechnique(nullptr),
+g_pVertexBuffer(nullptr),
+g_pTextureRV(nullptr),
+g_pWorldVariable(nullptr),
+g_pViewVariable(nullptr),
+g_pProjectionVariable(nullptr),
+g_pMeshColorVariable(nullptr),
+g_pLightDirVariable(nullptr),
 g_vMeshColor( 0.7f, 0.7f, 0.7f, 1.0f ),
 pgd_(pgd)
 {
@@ -37,10 +32,9 @@ pgd_(pgd)
 TDXHydrogenScene::~TDXHydrogenScene(void)
 {
 	SAFE_RELEASE( g_pVertexBuffer );
-    SAFE_RELEASE( g_pIndexBuffer );
     SAFE_RELEASE( g_pVertexLayout );
     SAFE_RELEASE( g_pTextureRV );
-    SAFE_RELEASE( g_pEffect );
+    //SAFE_RELEASE( g_pEffect );
 }
 
 void TDXHydrogenScene::FillSimpleVertex2(SimpleVertex2 & ver)
@@ -98,11 +92,16 @@ HRESULT TDXHydrogenScene::Init(ID3D10Device* pd3dDevice)
     // the release configuration of this program.
     dwShaderFlags |= D3D10_SHADER_DEBUG;
     #endif
-    hr = D3DX10CreateEffectFromFile( L"DxClassTest.fx", NULL, NULL, "fx_4_0", dwShaderFlags, 0, pd3dDevice, NULL,
-                                         NULL, &g_pEffect, NULL, NULL );
+
+    ID3D10Effect * effect;
+
+    hr = D3DX10CreateEffectFromFile( L"DxClassTest.fx", nullptr, nullptr, "fx_4_0", dwShaderFlags, 0, pd3dDevice, nullptr,
+                                         nullptr, &effect, nullptr, nullptr );
+    g_pEffect = utility::makeUniqueWithDeleter(effect, utility::Safe_Release<ID3D10Effect>());
+
     if( FAILED( hr ) )
     {
-        MessageBox( NULL,
+        MessageBox( nullptr,
                     L"The FX file cannot be located.  Please run this executable from the directory that contains the FX file.", L"Error", MB_OK );
         V_RETURN( hr );
     }
@@ -131,60 +130,21 @@ HRESULT TDXHydrogenScene::Init(ID3D10Device* pd3dDevice)
     // Set the input layout
     pd3dDevice->IASetInputLayout( g_pVertexLayout );
 
-    // Create vertex buffer
-    std::vector<SimpleVertex2> vertices(N);
-
-    tbb::task_scheduler_init init;
-
-    tbb::parallel_for(
-        std::uint32_t(0),
-        N,
-        std::uint32_t(1),
-        [this, &vertices](std::uint32_t i) { FillSimpleVertex2(vertices[i]); },
-        tbb::auto_partitioner());
-
-    D3D10_BUFFER_DESC bd;
-    bd.Usage = D3D10_USAGE_DEFAULT;
-    bd.ByteWidth = sizeof( SimpleVertex2 ) * N;
-    bd.BindFlags = D3D10_BIND_VERTEX_BUFFER;
-    bd.CPUAccessFlags = 0;
-    bd.MiscFlags = 0;
-    D3D10_SUBRESOURCE_DATA InitData;
-    InitData.pSysMem = vertices.data();
-    V_RETURN( pd3dDevice->CreateBuffer( &bd, &InitData, &g_pVertexBuffer ) );
-
-    // Set vertex buffer
-    UINT stride = sizeof( SimpleVertex2 );
-    UINT offset = 0;
-    pd3dDevice->IASetVertexBuffers( 0, 1, &g_pVertexBuffer, &stride, &offset );
-
+    Redraw(pd3dDevice);
 
     // Set primitive topology
-    pd3dDevice->IASetPrimitiveTopology( D3D10_PRIMITIVE_TOPOLOGY_POINTLIST );
+    pd3dDevice->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_POINTLIST);
 
     // Load the Texture
-    hr = D3DX10CreateShaderResourceViewFromFile( pd3dDevice, L"seafloor.dds", NULL, NULL, &g_pTextureRV, NULL );
-
+    hr = D3DX10CreateShaderResourceViewFromFile(pd3dDevice, L"seafloor.dds", nullptr, nullptr, &g_pTextureRV, nullptr);
+    
     // Initialize the world matrices
     D3DXMatrixIdentity( &g_World );
 
     // Initialize the view matrix
-#ifdef	USE_CAMERA
     D3DXVECTOR3 Eye( 0.0f, 50.0f, -50.0f );
     D3DXVECTOR3 At( 0.0f, 0.0f, 0.0f );
-//    D3DXVECTOR3 Eye( 0.0f, 0.0f, -800.0f );
-//    D3DXVECTOR3 At( 0.0f, 0.0f, 0.0f );
     g_Camera.SetViewParams( &Eye, &At );
-#else
-    D3DXVECTOR3 Eye( 0.0f, 3.0f, -6.0f );
-    D3DXVECTOR3 At( 0.0f, 0.0f, 0.0f );
-
-	D3DXVECTOR3 Up( 0.0f, 1.0f, 0.0f );
-    D3DXMatrixLookAtLH( &g_View, &Eye, &At, &Up );
-    // Update Variables that never change
-    g_pViewVariable->SetMatrix( ( float* )&g_View );
-#endif
-
 
     return S_OK;
 }
@@ -193,13 +153,7 @@ HRESULT TDXHydrogenScene::Init(ID3D10Device* pd3dDevice)
 HRESULT TDXHydrogenScene::OnFrameMove( double fTime, float fElapsedTime, void* pUserContext )
 {
     // Update the camera's position based on user input 
-
-#ifdef	USE_CAMERA
 	g_Camera.FrameMove( fElapsedTime );
-#else
-    // Rotate cube around the origin
-    D3DXMatrixRotationY( &g_World, 60.0f * DEG2RAD((float)fTime) );
-#endif
 
     // Modify the color
     g_vMeshColor.x = ( sinf( ( float )fTime * 1.0f ) + 1.0f ) * 0.5f;
@@ -229,12 +183,10 @@ HRESULT TDXHydrogenScene::OnRender( ID3D10Device* pd3dDevice, double fTime, floa
     //
     // Update variables that change once per frame
     //
-#ifdef	USE_CAMERA
 	const D3DXMATRIX	*mat = g_Camera.GetProjMatrix();
     g_pProjectionVariable->SetMatrix( ( float* )mat );
 	mat = g_Camera.GetViewMatrix();
     g_pViewVariable->SetMatrix( ( float* )mat );
-#endif
 
     g_pWorldVariable->SetMatrix( ( float* )&g_World );
 
@@ -260,25 +212,50 @@ HRESULT TDXHydrogenScene::OnResize( ID3D10Device* pd3dDevice, IDXGISwapChain* pS
 {
     // Setup the projection parameters again
     float fAspect = static_cast<float>( pBackBufferSurfaceDesc->Width ) / static_cast<float>( pBackBufferSurfaceDesc->Height );
-#ifdef	USE_CAMERA
-	g_Camera.SetProjParams( D3DX_PI / 4, fAspect, 0.1f, 100.0f );
+
+    g_Camera.SetProjParams( D3DX_PI / 4, fAspect, 0.1f, 100.0f );
     g_Camera.SetWindow( pBackBufferSurfaceDesc->Width, pBackBufferSurfaceDesc->Height );
     g_Camera.SetButtonMasks( MOUSE_MIDDLE_BUTTON, MOUSE_WHEEL, MOUSE_LEFT_BUTTON );
-#else
-    D3DXMatrixPerspectiveFovLH( &g_Projection, D3DX_PI * 0.25f, fAspect, 0.1f, 100.0f );
-    g_pProjectionVariable->SetMatrix( ( float* )&g_Projection );
-#endif
+
     return S_OK;
 }
 
 HRESULT TDXHydrogenScene::MsgPrc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
-
-#ifdef	USE_CAMERA
     return g_Camera.HandleMessages( hWnd, uMsg, wParam, lParam );
-#else
-	return S_OK;
-#endif
+}
+
+HRESULT TDXHydrogenScene::Redraw(ID3D10Device* pd3dDevice)
+{
+    // Create vertex buffer
+    std::vector<SimpleVertex2> vertices(N);
+
+    tbb::task_scheduler_init init;
+
+    tbb::parallel_for(
+        std::uint32_t(0),
+        N,
+        std::uint32_t(1),
+        [this, &vertices](std::uint32_t i) { FillSimpleVertex2(vertices[i]); },
+        tbb::auto_partitioner());
+
+    D3D10_BUFFER_DESC bd;
+    bd.Usage = D3D10_USAGE_DEFAULT;
+    bd.ByteWidth = sizeof(SimpleVertex2) * N;
+    bd.BindFlags = D3D10_BIND_VERTEX_BUFFER;
+    bd.CPUAccessFlags = 0;
+    bd.MiscFlags = 0;
+    D3D10_SUBRESOURCE_DATA InitData;
+    InitData.pSysMem = vertices.data();
+
+    auto hr = S_OK;
+
+    V_RETURN(pd3dDevice->CreateBuffer(&bd, &InitData, &g_pVertexBuffer));
+
+    // Set vertex buffer
+    UINT stride = sizeof(SimpleVertex2);
+    UINT offset = 0;
+    pd3dDevice->IASetVertexBuffers(0, 1, &g_pVertexBuffer, &stride, &offset);
 }
 
 std::wstring my_mbstowcs(std::string const & mbs, std::int32_t codeMulti)

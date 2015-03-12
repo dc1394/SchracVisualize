@@ -18,9 +18,7 @@
 
 #define DEG2RAD( a ) ( a * D3DX_PI / 180.f )
 
-//#include "TDXTestScene.h"
 #include "TDXHydrogenScene.h"
-//#include "TMomentumScene.h"
 
 
 TDXScene*	scene=NULL;
@@ -36,6 +34,8 @@ CDXUTTextHelper*                    g_pTxtHelper = NULL;
 
 bool	ROT_FLAG = true;
 
+bool redraw = false;
+
 // !A global variable.
 /*!
     データオブジェクト
@@ -48,7 +48,7 @@ std::shared_ptr<getdata::GetData> pgd_;
 #define IDC_TOGGLEFULLSCREEN    1
 #define IDC_CHANGEDEVICE        2
 #define IDC_TOGGLEROTATION      3
-
+#define IDC_COMBOBOX            4
 
 //--------------------------------------------------------------------------------------
 // Forward declarations 
@@ -85,7 +85,18 @@ void InitApp()
     g_HUD.AddButton( IDC_CHANGEDEVICE, L"Change device (F2)", 35, iY += 24, 125, 22, VK_F2 );
     g_HUD.AddButton( IDC_TOGGLEROTATION, L"Toggle Rotaion Animation", 35, iY += 24, 125, 22 );
 
-
+    // Combobox
+    CDXUTComboBox* pCombo;
+    g_HUD.AddComboBox(IDC_COMBOBOX, 35, iY += 34, 125, 22, L'O', false, &pCombo);
+    if (pCombo)
+    {
+        pCombo->SetDropHeight(100);
+        pCombo->AddItem(L"Combobox item (O)", (LPVOID)0x11111111);
+        pCombo->AddItem(L"Placeholder (O)", (LPVOID)0x12121212);
+        pCombo->AddItem(L"One more (O)", (LPVOID)0x13131313);
+        pCombo->AddItem(L"I can't get enough (O)", (LPVOID)0x14141414);
+        pCombo->AddItem(L"Ok, last one, I promise (O)", (LPVOID)0x15151515);
+    }
 }
 
 
@@ -167,8 +178,6 @@ HRESULT CALLBACK OnD3D10CreateDevice( ID3D10Device* pd3dDevice, const DXGI_SURFA
     g_pTxtHelper = new CDXUTTextHelper( NULL, NULL, g_pFont, g_pSprite, 15 );
 
 	scene = new TDXHydrogenScene(pgd_);
-//	scene = new TMomentumScene;
-//	scene = new TDXTestScene;
 	return scene->Init(pd3dDevice);
 }
 
@@ -227,6 +236,10 @@ void CALLBACK OnD3D10FrameRender( ID3D10Device* pd3dDevice, double fTime, float 
     }
 	else
 	{
+        if (redraw) {
+            scene->Redraw(pd3dDevice);
+            redraw = false;
+        }
 		scene->OnRender( pd3dDevice, fTime, fElapsedTime, pUserContext );
 	    g_HUD.OnRender( fElapsedTime );
 		//RenderText(fTime);
@@ -330,14 +343,29 @@ void CALLBACK OnKeyboard( UINT nChar, bool bKeyDown, bool bAltDown, void* pUserC
 //--------------------------------------------------------------------------------------
 void CALLBACK OnGUIEvent( UINT nEvent, int nControlID, CDXUTControl* pControl, void* pUserContext )
 {
-    switch( nControlID )
+    switch (nControlID )
     {
         case IDC_TOGGLEFULLSCREEN:
-            DXUTToggleFullScreen(); break;
+            DXUTToggleFullScreen();
+            break;
+
         case IDC_CHANGEDEVICE:
-            g_D3DSettingsDlg.SetActive( !g_D3DSettingsDlg.IsActive() ); break;
+            g_D3DSettingsDlg.SetActive( !g_D3DSettingsDlg.IsActive() );
+            break;
+
 		case IDC_TOGGLEROTATION:
-			ROT_FLAG = !ROT_FLAG; break;
+			ROT_FLAG = !ROT_FLAG;
+            break;
+
+        case IDC_COMBOBOX:
+        {
+            DXUTComboBoxItem* pItem = ((CDXUTComboBox*)pControl)->GetSelectedItem();
+            if (pItem)
+            {
+                redraw = true;
+            }
+            break;
+        }
     }
 }
 

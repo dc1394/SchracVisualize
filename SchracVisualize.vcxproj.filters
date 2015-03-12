@@ -18,6 +18,9 @@
     <Filter Include="getdata">
       <UniqueIdentifier>{ae52d785-71a4-4794-ac38-da4edbd16fb9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="utility">
+      <UniqueIdentifier>{4cc49439-562a-4ce4-bb3b-01053a4f5851}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="DXUT\Optional\directx.ico">
@@ -114,6 +117,9 @@
     </ClInclude>
     <ClInclude Include="getdata\readdatafile.h">
       <Filter>getdata</Filter>
+    </ClInclude>
+    <ClInclude Include="utility\utility.h">
+      <Filter>utility</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

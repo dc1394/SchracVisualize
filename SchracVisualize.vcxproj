@@ -397,6 +397,7 @@
     <ClInclude Include="myrandom\myrand.h" />
     <ClInclude Include="TDXHydrogenScene.h" />
     <ClInclude Include="TDXScene.h" />
+    <ClInclude Include="utility\utility.h" />
     <None Include="DxClassTest.fx" />
     <None Include="SchracVisualize.txt" />
     <None Include="DXUT\Optional\directx.ico" />
