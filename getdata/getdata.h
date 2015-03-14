@@ -43,9 +43,9 @@ namespace getdata {
 
         //!  A public member function (const).
         /*!
-            電子密度ρ(r)を返す
+            波動関数φ(r)を返す
             \param r rの値
-            \return ρ(r)の値
+            \return φ(r)の値
         */
         double operator()(double r) const;
 

@@ -87,8 +87,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="EmptyProject9.cpp" />
-    <ClCompile Include="TDXHydrogenScene.cpp" />
-    <ClCompile Include="TDXScene.cpp" />
     <ClCompile Include="DxClassTest.cpp" />
     <ClCompile Include="myrandom\myrand.cpp">
       <Filter>myrandom</Filter>
@@ -99,10 +97,12 @@
     <ClCompile Include="getdata\readdatafile.cpp">
       <Filter>getdata</Filter>
     </ClCompile>
+    <ClCompile Include="TDXScene.cpp" />
+    <ClCompile Include="utility\utility.cpp">
+      <Filter>utility</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="TDXHydrogenScene.h" />
-    <ClInclude Include="TDXScene.h" />
     <ClInclude Include="myrandom\myrand.h">
       <Filter>myrandom</Filter>
     </ClInclude>
@@ -121,6 +121,7 @@
     <ClInclude Include="utility\utility.h">
       <Filter>utility</Filter>
     </ClInclude>
+    <ClInclude Include="TDXScene.h" />
   </ItemGroup>
   <ItemGroup>
     <CLInclude Include="resource.h">

@@ -9,17 +9,71 @@
 
 #pragma once
 
+#include <array>                // for std::array
+#include <cstdint>              // for std::int32_t
 #include <memory>               // for std::unique_ptr
 #include <string>               // for std::wstring
+#include <utility>              // for std::move
 #include <boost/cast.hpp>       // for boost::numeric_cast
 #include <boost/optional.hpp>   // for boost::optional
 #include <boost/utility.hpp>    // for boost::checked_delete
 
 namespace utility {
+    template <typename T, typename D>
+    //! A function.
+    /*!
+        カスタムデリータを指定してスマートポインタを生成する
+        \tparam T スマートポインタの型
+        \tparam D カスタムデリータの型
+        \param t 対象のポインタ
+        \param deleter カスタムデリータへの右辺値参照
+        \return カスタムデリータを指定したスマートポインタ
+    */
+    std::unique_ptr<T, D> createUnique(T * t, D && deleter);
+
+
+    // ! A function.
+    /*!
+        マルチバイト文字列をワイド文字列に変換する
+        \param mbs マルチバイト文字列
+        \param codeMulti マルチバイト文字列のエンコード（デフォルト=932）
+        \return ワイド文字列
+    */
+    std::wstring my_mbstowcs(std::string const & mbs, std::int32_t codeMulti = 932);
+
+    // ! A function.
+    /*!
+        ファイルを開く
+        \return ファイル名
+    */
+    std::string myOpenFile();
+
+    // ! A function.
+    /*!
+        ワイド文字列をマルチバイト文字列に変換する
+        \param wcs ワイド文字列
+        \param codeMulti マルチバイト文字列のエンコード（デフォルト=932）
+        \return マルチバイト文字列
+    */
+    std::string my_wcstombs(std::array<wchar_t, MAX_PATH> const & wcs, std::int32_t codeMulti = 932);
+
+    // ! A function.
+    /*!
+        ファイル選択ダイアログを開く
+        \param hWnd ウィンドウハンドル
+        \param filepath ファイルのパス
+        \param filename ファイル名
+        \param title ファイル選択ダイアログのタイトル
+        \param defextension デフォルトのファイルの種類
+        \return ファイル選択ダイアログの戻り値
+    */
+    BOOL showFileDialog(HWND hWnd, wchar_t * filepath, wchar_t * filename, wchar_t * title, wchar_t * defextension);
+
     template <typename T>
     //! A function.
     /*!
         関数が成功したかどうかを判断する
+        \tparam T 関数の戻り値の型
         \param x HRESULTの値
         \return 成功したらboost::optional<HRESULT>、失敗したらboost::none
     */
@@ -29,6 +83,7 @@ namespace utility {
     //! A struct.
     /*!
         リソースを安全に解放するクラス
+        \tparam T リソースの型
     */
     struct Safe_Release final {
         //! A public member function.
@@ -45,9 +100,10 @@ namespace utility {
     };
 
     template <typename T>
-    //! A function.
+    //! A struct.
     /*!
         確保したメモリを安全に解放するクラス
+        \tparam T 確保したメモリの型
     */
     struct Safe_Delete final {
         //! A public member function.
@@ -63,18 +119,16 @@ namespace utility {
         }
     };
 
-    template <typename T> T v_return(T const & x)
+    template <typename T> boost::optional<HRESULT> v_return(T const & x)
     {
         auto const hr = boost::numeric_cast<HRESULT>(x);
         return hr >= 0 ? boost::optional<HRESULT>(hr) : boost::none;
     }
 
-    template <class T, class D>
-    std::unique_ptr<T, D> makeUniqueWithDeleter(T * t, D deleter)
+    template <typename T, typename D>
+    std::unique_ptr<T, D> createUnique(T * t, D && deleter)
     {
-        std::unique_ptr<T, D> ptr(t, deleter);
-
-        return ptr;
+        return std::unique_ptr<T, D>(t, std::move(deleter));
     }
 }
 

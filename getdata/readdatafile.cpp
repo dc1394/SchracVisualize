@@ -16,7 +16,7 @@ namespace getdata {
     {
         std::ifstream ifs(filename);
         std::array<char, BUFSIZE> buf;
-        std::vector<double> r_mesh, rho;
+        std::vector<double> r_mesh, phiorrho;
 
         // トークン分割
         std::vector<std::string> tokens;
@@ -31,25 +31,25 @@ namespace getdata {
                         
             // もし一文字も読めなかったら
             if (!ifs.gcount() && !i) {
-                throw std::runtime_error("電子密度のデータファイルが空です！");
+                throw std::runtime_error("データファイルが空です！");
             }
             else if (!ifs.gcount()) {
                 r_mesh.shrink_to_fit();
-                rho.shrink_to_fit();
+                phiorrho.shrink_to_fit();
 
-                return std::make_pair(r_mesh, rho);
+                return std::make_pair(r_mesh, phiorrho);
             }
             else if (tokens.size() != 2) {
-                throw std::runtime_error("電子密度のデータファイルが異常です！");
+                throw std::runtime_error("データファイルが異常です！");
             }
 
             std::size_t index1, index2;
 
             r_mesh.push_back(std::stod(tokens[0], &index1));
-            rho.push_back(std::stod(tokens[1], &index2));
+            phiorrho.push_back(std::stod(tokens[1], &index2));
 
             if (tokens[0].size() != index1 || tokens[1].size() != index2) {
-                throw std::runtime_error("電子密度のデータファイルが異常です！");
+                throw std::runtime_error("データファイルが異常です！");
             }
         }
     }

@@ -388,14 +388,13 @@
     <ClCompile Include="getdata\getdata.cpp" />
     <ClCompile Include="getdata\readdatafile.cpp" />
     <ClCompile Include="myrandom\myrand.cpp" />
-    <ClCompile Include="TDXHydrogenScene.cpp" />
     <ClCompile Include="TDXScene.cpp" />
+    <ClCompile Include="utility\utility.cpp" />
     <ClInclude Include="getdata\deleter.h" />
     <ClInclude Include="getdata\getdata.h" />
     <ClInclude Include="getdata\property.h" />
     <ClInclude Include="getdata\readdatafile.h" />
     <ClInclude Include="myrandom\myrand.h" />
-    <ClInclude Include="TDXHydrogenScene.h" />
     <ClInclude Include="TDXScene.h" />
     <ClInclude Include="utility\utility.h" />
     <None Include="DxClassTest.fx" />

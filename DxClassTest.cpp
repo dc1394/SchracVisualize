@@ -10,18 +10,25 @@
 #include "DXUTgui.h"
 #include "DXUTsettingsDlg.h"
 #include "SDKmisc.h"
-
+#include "TDXScene.h"
 #include "resource.h"
-
-
-#include <locale>
+#include <malloc.h>
 
 #define DEG2RAD( a ) ( a * D3DX_PI / 180.f )
 
-#include "TDXHydrogenScene.h"
+// !A global variable.
+/*!
+    _aligned_mallocで確保されたメモリを解放するラムダ式
+    \param ptr _aligned_malloc _aligned_mallocで確保されたメモリへの先頭ポインタ
+*/
+auto const aligned_deleter = [](TDXScene * ptr)
+{
+    ptr->~TDXScene();
+    _aligned_free(ptr);
+};
 
+std::unique_ptr<TDXScene, decltype(aligned_deleter)> scene;
 
-TDXScene*	scene=NULL;
 D3DXVECTOR4                         g_vMeshColor( 0.7f, 0.7f, 0.7f, 1.0f );
 
 CDXUTDialogResourceManager          g_DialogResourceManager;// manager for shared resources of dialogs
@@ -30,7 +37,7 @@ CDXUTDialog                         g_HUD;                  // manages the 3D UI
 
 ID3DX10Font*                        g_pFont = NULL;         // Font for drawing text
 ID3DX10Sprite*                      g_pSprite = NULL;       // Sprite for batching text drawing
-CDXUTTextHelper*                    g_pTxtHelper = NULL;
+//CDXUTTextHelper*                    g_pTxtHelper = NULL;
 
 bool	ROT_FLAG = true;
 
@@ -133,10 +140,19 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdL
 
 	InitApp();
 	
-    pgd_ = std::make_shared<getdata::GetData>(MyOpenFile());
+    while (true) {
+        try {
+            pgd_ = std::make_shared<getdata::GetData>(utility::myOpenFile());
+        }
+        catch (std::runtime_error const & e) {
+            ::MessageBox(nullptr, utility::my_mbstowcs(e.what()).c_str(), L"エラー", MB_OK | MB_ICONWARNING);
+            continue;
+        }
+        break;
+    }
     auto const title = "Wavefunction in " + pgd_->Atomname() + " for " + pgd_->Orbital() + " orbital";
 
-	DXUTCreateWindow( my_mbstowcs(title).c_str());
+	DXUTCreateWindow( utility::my_mbstowcs(title).c_str());
     DXUTCreateDevice( true, 640, 480 );
 //    DXUTCreateDevice( false);
 
@@ -175,9 +191,10 @@ HRESULT CALLBACK OnD3D10CreateDevice( ID3D10Device* pd3dDevice, const DXGI_SURFA
                                 OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
                                 L"Arial", &g_pFont ) );
     V_RETURN( D3DX10CreateSprite( pd3dDevice, 512, &g_pSprite ) );
-    g_pTxtHelper = new CDXUTTextHelper( NULL, NULL, g_pFont, g_pSprite, 15 );
-
-	scene = new TDXHydrogenScene(pgd_);
+    //g_pTxtHelper = new CDXUTTextHelper( NULL, NULL, g_pFont, g_pSprite, 15 );
+    
+    auto buf = _aligned_malloc(sizeof(TDXScene), 16);
+    scene.reset(new(buf) TDXScene(pgd_));
 	return scene->Init(pd3dDevice);
 }
 
@@ -206,17 +223,17 @@ HRESULT CALLBACK OnD3D10ResizedSwapChain( ID3D10Device* pd3dDevice, IDXGISwapCha
 //--------------------------------------------------------------------------------------
 void RenderText( double fTime)
 {
-	char buf[1000];
-	WCHAR	wbuf[1000];
-	memset( wbuf, 0, sizeof(wbuf));
-    g_pTxtHelper->Begin();
-    g_pTxtHelper->SetInsertionPos( 2, 0 );
-    g_pTxtHelper->SetForegroundColor( D3DXCOLOR( 1.0f, 1.0f, 0.0f, 1.0f ) );
-	sprintf_s( buf, "time = %f", fTime);
-    std::locale::global(std::locale("japanese"));
-	MultiByteToWideChar( CP_ACP, 0, buf, strlen(buf), wbuf, sizeof(wbuf));
-    g_pTxtHelper->DrawTextLine( wbuf );
-    g_pTxtHelper->End();
+	//char buf[1000];
+	//WCHAR	wbuf[1000];
+	//memset( wbuf, 0, sizeof(wbuf));
+ //   g_pTxtHelper->Begin();
+ //   g_pTxtHelper->SetInsertionPos( 2, 0 );
+ //   g_pTxtHelper->SetForegroundColor( D3DXCOLOR( 1.0f, 1.0f, 0.0f, 1.0f ) );
+	//sprintf_s( buf, "time = %f", fTime);
+ //   std::locale::global(std::locale("japanese"));
+	//MultiByteToWideChar( CP_ACP, 0, buf, strlen(buf), wbuf, sizeof(wbuf));
+ //   g_pTxtHelper->DrawTextLine( wbuf );
+ //   g_pTxtHelper->End();
 }
 
 
@@ -267,9 +284,9 @@ void CALLBACK OnD3D10DestroyDevice( void* pUserContext )
     DXUTGetGlobalResourceCache().OnDestroyDevice();
     SAFE_RELEASE( g_pFont );
     SAFE_RELEASE( g_pSprite );
-    SAFE_DELETE( g_pTxtHelper );
+    //SAFE_DELETE( g_pTxtHelper );
 
-	SAFE_DELETE(scene);
+    scene.reset(nullptr);
 }
 
 
