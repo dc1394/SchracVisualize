@@ -122,9 +122,6 @@
       <Filter>utility</Filter>
     </ClInclude>
     <ClInclude Include="TDXScene.h" />
-    <ClInclude Include="myrandom\dxor156.h">
-      <Filter>myrandom</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CLInclude Include="resource.h">

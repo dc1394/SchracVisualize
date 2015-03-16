@@ -1,6 +1,5 @@
 #include "DXUT.h"
 #include "DXUTmisc.h"
-#include "myrandom/dxor156.h"
 #include "myrandom/myrand.h"
 #include "resource.h"
 #include "TDXScene.h"
@@ -33,22 +32,20 @@ void TDXScene::FillSimpleVertex2(SimpleVertex2 & ver)
 
     auto const n = static_cast<double>(pgd_->N);
     auto const rmax = (2.3622 * n + 3.3340) * n + 1.3228;
-    Dxor156 dxor;
     MyRand mr(-rmax, rmax); 
     MyRand mr2(pgd_->Funcmin, pgd_->Funcmax);
 
     do {
-        x = dxor.rand(-rmax, rmax);
-        //mr.myrand();
-        y = dxor.rand(-rmax, rmax);//mr.myrand();
-        z = dxor.rand(-rmax, rmax); //mr.myrand();
+        x = mr.myrand();
+        y = mr.myrand();
+        z = mr.myrand();
 
         auto const rmin = pgd_->R_meshmin();
         if (std::fabs(x) < rmin || std::fabs(y) < rmin || std::fabs(z) < rmin) {
             continue;
         }
 
-        p = dxor.rand(pgd_->Funcmin, pgd_->Funcmax);//mr2.myrand();
+        p = mr2.myrand();
         auto const r = std::sqrt(x * x + y * y + z * z);
 
         switch (pgd_->Rho_wf_type_) {
