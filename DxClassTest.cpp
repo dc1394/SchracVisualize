@@ -25,6 +25,7 @@ auto const aligned_deleter = [](TDXScene * ptr)
 {
     ptr->~TDXScene();
     _aligned_free(ptr);
+    ptr = nullptr;
 };
 
 std::unique_ptr<TDXScene, decltype(aligned_deleter)> scene;
@@ -35,8 +36,18 @@ CDXUTDialogResourceManager          g_DialogResourceManager;// manager for share
 CD3DSettingsDlg                     g_D3DSettingsDlg;       // Device settings dialog
 CDXUTDialog                         g_HUD;                  // manages the 3D UI
 
-ID3DX10Font*                        g_pFont = NULL;         // Font for drawing text
-ID3DX10Sprite*                      g_pSprite = NULL;       // Sprite for batching text drawing
+// !A global variable.
+/*!
+    Font for drawing text
+*/
+std::unique_ptr<ID3DX10Font, utility::Safe_Release<ID3DX10Font>> font;
+
+// !A global variable.
+/*!
+    Sprite for batching text drawing
+*/
+std::unique_ptr<ID3DX10Sprite, utility::Safe_Release<ID3DX10Sprite>> sprite;
+
 //CDXUTTextHelper*                    g_pTxtHelper = NULL;
 
 bool	ROT_FLAG = true;
@@ -150,9 +161,20 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdL
         }
         break;
     }
-    auto const title = "Wavefunction in " + pgd_->Atomname() + " for " + pgd_->Orbital() + " orbital";
 
-	DXUTCreateWindow( utility::my_mbstowcs(title).c_str());
+    std::string windowtitle;
+    switch (pgd_->Rho_wf_type_) {
+    case getdata::GetData::Rho_Wf_type::RHO:
+        windowtitle = "Electron density";
+        break;
+
+    case getdata::GetData::Rho_Wf_type::WF:
+        windowtitle = "Wavefunction";
+        break;
+    }
+    windowtitle += "in " + pgd_->Atomname() + " for " + pgd_->Orbital() + " orbital";
+
+	DXUTCreateWindow( utility::my_mbstowcs(windowtitle).c_str());
     DXUTCreateDevice( true, 640, 480 );
 //    DXUTCreateDevice( false);
 
@@ -187,10 +209,16 @@ HRESULT CALLBACK OnD3D10CreateDevice( ID3D10Device* pd3dDevice, const DXGI_SURFA
 
     V_RETURN( g_DialogResourceManager.OnD3D10CreateDevice( pd3dDevice ) );
     V_RETURN( g_D3DSettingsDlg.OnD3D10CreateDevice( pd3dDevice ) );
+
+    ID3DX10Font * fonttemp;
     V_RETURN( D3DX10CreateFont( pd3dDevice, 15, 0, FW_BOLD, 1, FALSE, DEFAULT_CHARSET,
                                 OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
-                                L"Arial", &g_pFont ) );
-    V_RETURN( D3DX10CreateSprite( pd3dDevice, 512, &g_pSprite ) );
+                                L"Arial", &fonttemp ) );
+    font.reset(fonttemp);
+
+    ID3DX10Sprite * spritetmp;
+    V_RETURN( D3DX10CreateSprite( pd3dDevice, 512, &spritetmp ) );
+    sprite.reset(spritetmp);
     //g_pTxtHelper = new CDXUTTextHelper( NULL, NULL, g_pFont, g_pSprite, 15 );
     
     auto buf = _aligned_malloc(sizeof(TDXScene), 16);
@@ -282,11 +310,11 @@ void CALLBACK OnD3D10DestroyDevice( void* pUserContext )
     g_DialogResourceManager.OnD3D10DestroyDevice();
     g_D3DSettingsDlg.OnD3D10DestroyDevice();
     DXUTGetGlobalResourceCache().OnDestroyDevice();
-    SAFE_RELEASE( g_pFont );
-    SAFE_RELEASE( g_pSprite );
+    //SAFE_RELEASE( g_pFont );
+    //SAFE_RELEASE( g_pSprite );
     //SAFE_DELETE( g_pTxtHelper );
 
-    scene.reset(nullptr);
+    scene.reset();
 }
 
 

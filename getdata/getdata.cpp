@@ -19,11 +19,12 @@ namespace getdata {
     
     GetData::GetData(std::string const & filename) :
         Atomname([this] { return atomname_; }, nullptr),
+        Funcmax([this] { return funcmax_; }, nullptr),
+        Funcmin([this] { return funcmin_; }, nullptr),
         L([this] { return l_; }, nullptr),
         N([this] { return n_; }, nullptr),
         Orbital([this] { return orbital_; }, nullptr),
-        Phimax([this] { return phimax_; }, nullptr),
-        Phimin([this] { return phimin_; }, nullptr),
+        Rho_wf_type_([this] { return rho_wf_type_; }, nullptr),
         R_meshmin([this] { return r_meshmin_; }, nullptr),
         acc_(gsl_interp_accel_alloc(), gsl_interp_accel_deleter)
     {
@@ -32,6 +33,16 @@ namespace getdata {
         // トークン分割
         std::vector<std::string> tokens;
         split(tokens, filename, is_any_of("_"), token_compress_on);
+
+        if (tokens[0].find("rho") != std::string::npos) {
+            rho_wf_type_ = GetData::Rho_Wf_type::RHO;
+        }
+        else if (tokens[0].find("wf") != std::string::npos) {
+            rho_wf_type_ = GetData::Rho_Wf_type::WF;
+        }
+        else {
+            throw std::runtime_error("ファイル名が異常です！");
+        }
 
         if (tokens[1] == "H") {
             atomname_ = "Hydrogen";
@@ -82,11 +93,11 @@ namespace getdata {
         
         BOOST_ASSERT(r_mesh.size() == phi.size());
 
-        phimax_ = *boost::max_element(phi);
+        funcmax_ = *boost::max_element(phi);
         
         std::vector<double> temp(phi);
-        boost::for_each(temp, [](double & v) { v = v > 0.0 ? 0.0 : -v; });
-        phimin_ = -*boost::max_element(temp);
+        boost::for_each(temp, [](double & v) { v = v >= 0.0 ? 0.0 : -v; });
+        funcmin_ = -*boost::max_element(temp);
         
         r_meshmin_ = r_mesh[0];
 

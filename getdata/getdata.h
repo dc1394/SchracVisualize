@@ -21,9 +21,24 @@ namespace getdata {
         rのメッシュと、そのメッシュにおける動径波動関数を与えるクラス
     */
     class GetData final {
-        // #region コンストラクタ・デストラクタ
+        // #region 列挙型
 
     public:
+        //!  A enumerated type
+        /*!
+            密度か動径波動関数かを表す列挙型
+        */
+        enum class Rho_Wf_type {
+            // 密度
+            RHO,
+            // 動径波動関数
+            WF
+        };
+
+        // #endregion 列挙型
+
+        // #region コンストラクタ・デストラクタ
+
         //! A constructor.
         /*!
             唯一のコンストラクタ
@@ -43,9 +58,9 @@ namespace getdata {
 
         //!  A public member function (const).
         /*!
-            波動関数φ(r)を返す
+            関数の値を返す
             \param r rの値
-            \return φ(r)の値
+            \return 関数の値
         */
         double operator()(double r) const;
 
@@ -59,36 +74,42 @@ namespace getdata {
         */
         Property<std::string> Atomname;
 
-        //!  A property.
+        //! A property.
         /*!
-            方位量子数
+            関数の最大値のプロパティ
         */
-        Property<std::uint32_t> L;
-
-        //!  A property.
-        /*!
-            主量子数
-        */
-        Property<std::int32_t> N;
-
-        //!  A property.
-        /*!
-            軌道
-        */
-        Property<std::string> Orbital;
+        Property<double> const Funcmax;
 
         //! A property.
         /*!
-            固有関数φ(r)の最大値のプロパティ
+            関数の最小値のプロパティ
         */
-        Property<double> const Phimax;
+        Property<double> const Funcmin;
 
-        //! A property.
+        //!  A property.
         /*!
-            固有関数φ(r)の最小値のプロパティ
+            方位量子数へのプロパティ
         */
-        Property<double> const Phimin;
+        Property<std::uint32_t> const L;
 
+        //!  A property.
+        /*!
+            主量子数へのプロパティ
+        */
+        Property<std::int32_t> const N;
+
+        //!  A property.
+        /*!
+            軌道へのプロパティ
+        */
+        Property<std::string> const Orbital;
+
+        //!  A private member variable.
+        /*!
+            解く方程式のタイプへのプロパティ
+        */
+        Property<GetData::Rho_Wf_type> const Rho_wf_type_;
+        
         //! A property.
         /*!
             rのメッシュの最小値のプロパティ
@@ -106,43 +127,49 @@ namespace getdata {
         */
         std::unique_ptr<gsl_interp_accel, decltype(gsl_interp_accel_deleter)> const acc_;
 
-        //!  A public member variable.
+        //!  A private member variable.
         /*!
             元素名
         */
         std::string atomname_;
-        
-        //!  A public member variable.
+
+        //!  A private member variable.
+        /*!
+            関数の最大値
+        */
+        double funcmax_;
+
+        //!  A private member variable.
+        /*!
+            関数の最小値
+        */
+        double funcmin_;
+
+        //!  A private member variable.
         /*!
         方位量子数
         */
         std::uint32_t l_;
 
-        //!  A public member variable.
+        //!  A private member variable.
         /*!
             主量子数
         */
         std::int32_t n_;
 
-        //!  A public member variable.
+        //!  A private member variable.
         /*!
             軌道
         */
         std::string orbital_;
-
-        //!  A public member variable.
-        /*!
-            固有関数φ(r)の最大値
-        */
-        double phimax_;
         
-        //!  A public member variable.
+        //!  A private member variable.
         /*!
-            固有関数φ(r)の最小値
+            解く方程式のタイプ
         */
-        double phimin_;
-
-        //!  A public member variable.
+        GetData::Rho_Wf_type rho_wf_type_;
+        
+        //!  A private member variable.
         /*!
             rのメッシュの最小値
         */

@@ -1,10 +1,11 @@
 #include "DXUT.h"
 #include "DXUTmisc.h"
-#include "resource.h"
+#include "myrandom/dxor156.h"
 #include "myrandom/myrand.h"
+#include "resource.h"
 #include "TDXScene.h"
-
 #include <boost/math/special_functions/spherical_harmonic.hpp>  // for boost::math::spherical_harmonic
+#include <gsl/gsl_sf_legendre.h>
 #include <tbb/parallel_for.h>                                   // for tbb::parallel_for
 #include <tbb/partitioner.h>                                    // for tbb::auto_partitioner
 #include <tbb/task_scheduler_init.h>                            // for tbb::task_scheduler_init
@@ -32,25 +33,37 @@ void TDXScene::FillSimpleVertex2(SimpleVertex2 & ver)
 
     auto const n = static_cast<double>(pgd_->N);
     auto const rmax = (2.3622 * n + 3.3340) * n + 1.3228;
+    Dxor156 dxor;
     MyRand mr(-rmax, rmax); 
-    MyRand mr2(pgd_->Phimin, pgd_->Phimax);
+    MyRand mr2(pgd_->Funcmin, pgd_->Funcmax);
 
     do {
-        x = mr.myrand();
-        y = mr.myrand();
-        z = mr.myrand();
+        x = dxor.rand(-rmax, rmax);
+        //mr.myrand();
+        y = dxor.rand(-rmax, rmax);//mr.myrand();
+        z = dxor.rand(-rmax, rmax); //mr.myrand();
 
         auto const rmin = pgd_->R_meshmin();
         if (std::fabs(x) < rmin || std::fabs(y) < rmin || std::fabs(z) < rmin) {
             continue;
         }
 
-        p = mr2.myrand();
-
+        p = dxor.rand(pgd_->Funcmin, pgd_->Funcmax);//mr2.myrand();
         auto const r = std::sqrt(x * x + y * y + z * z);
-        auto const phi = std::acos(x / std::sqrt(x * x + y * y));
-        auto const ylm = boost::math::spherical_harmonic_r(pgd_->L, 0, std::acos(z / r), phi);
-        pp = static_cast<float>((*pgd_)(r) * ylm);
+
+        switch (pgd_->Rho_wf_type_) {
+        case getdata::GetData::Rho_Wf_type::RHO:
+            pp = (*pgd_)(r) * gsl_sf_legendre_sphPlm(pgd_->L, 0, z / r);
+            pp *= pp;
+            break;
+
+        case getdata::GetData::Rho_Wf_type::WF:
+            auto const phi = std::acos(x / std::sqrt(x * x + y * y));
+            auto const ylm = boost::math::spherical_harmonic_r(pgd_->L, 0, std::acos(z / r), phi);
+            pp = (*pgd_)(r) * ylm;
+            break;
+        }
+
         sign = (pp > 0.0) - (pp < 0.0);
     } while (std::fabs(pp) < std::fabs(p));
 
@@ -92,7 +105,7 @@ HRESULT TDXScene::Init(ID3D10Device* pd3dDevice)
             nullptr,
             nullptr);
 
-    effect = utility::createUnique(effecttmp, utility::Safe_Release<ID3D10Effect>());
+    effect.reset(effecttmp);
 
     if (FAILED( hr ))
     {
@@ -133,7 +146,7 @@ HRESULT TDXScene::Init(ID3D10Device* pd3dDevice)
         &pVertexLayout))) {
         return S_FALSE;
     }
-    vertexLayout = utility::createUnique(pVertexLayout, utility::Safe_Release<ID3D10InputLayout>());
+    vertexLayout.reset(pVertexLayout);
 
     // Set the input layout
     pd3dDevice->IASetInputLayout( vertexLayout.get() );
@@ -146,7 +159,7 @@ HRESULT TDXScene::Init(ID3D10Device* pd3dDevice)
     ID3D10ShaderResourceView * textureRVtmp;
     // Load the Texture
     hr = D3DX10CreateShaderResourceViewFromFile(pd3dDevice, L"seafloor.dds", nullptr, nullptr, &textureRVtmp, nullptr);
-    textureRV = utility::createUnique(textureRVtmp, utility::Safe_Release<ID3D10ShaderResourceView>());
+    textureRV.reset(textureRVtmp);
 
     // Initialize the world matrices
     D3DXMatrixIdentity( &world );
@@ -264,7 +277,7 @@ HRESULT TDXScene::Redraw(ID3D10Device* pd3dDevice)
     auto stride = sizeof(SimpleVertex2);
     UINT offset = 0;
     pd3dDevice->IASetVertexBuffers(0, 1, &vertexBuffertmp, &stride, &offset);
-    vertexBuffer = utility::createUnique(vertexBuffertmp, utility::Safe_Release<ID3D10Buffer>());
+    vertexBuffer.reset(vertexBuffertmp);
 
     return S_OK;
 }

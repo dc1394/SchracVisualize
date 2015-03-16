@@ -19,19 +19,6 @@
 #include <boost/utility.hpp>    // for boost::checked_delete
 
 namespace utility {
-    template <typename T, typename D>
-    //! A function.
-    /*!
-        カスタムデリータを指定してスマートポインタを生成する
-        \tparam T スマートポインタの型
-        \tparam D カスタムデリータの型
-        \param t 対象のポインタ
-        \param deleter カスタムデリータへの右辺値参照
-        \return カスタムデリータを指定したスマートポインタ
-    */
-    std::unique_ptr<T, D> createUnique(T * t, D && deleter);
-
-
     // ! A function.
     /*!
         マルチバイト文字列をワイド文字列に変換する
@@ -123,12 +110,6 @@ namespace utility {
     {
         auto const hr = boost::numeric_cast<HRESULT>(x);
         return hr >= 0 ? boost::optional<HRESULT>(hr) : boost::none;
-    }
-
-    template <typename T, typename D>
-    std::unique_ptr<T, D> createUnique(T * t, D && deleter)
-    {
-        return std::unique_ptr<T, D>(t, std::move(deleter));
     }
 }
 

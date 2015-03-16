@@ -394,6 +394,7 @@
     <ClInclude Include="getdata\getdata.h" />
     <ClInclude Include="getdata\property.h" />
     <ClInclude Include="getdata\readdatafile.h" />
+    <ClInclude Include="myrandom\dxor156.h" />
     <ClInclude Include="myrandom\myrand.h" />
     <ClInclude Include="TDXScene.h" />
     <ClInclude Include="utility\utility.h" />

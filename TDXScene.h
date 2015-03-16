@@ -95,14 +95,14 @@ private:
     */
     CModelViewerCamera                  camera;
 
+    ID3D10EffectShaderResourceVariable* diffuseVariable;
+    
     // ! A private member variable.
     /*!
         エフェクト＝シェーダプログラムを読ませるところ
     */
     std::unique_ptr<ID3D10Effect, utility::Safe_Release<ID3D10Effect>> effect;
-
-    ID3D10EffectShaderResourceVariable* diffuseVariable;
-
+    
     D3DXVECTOR4							lightDir;
 
     ID3D10EffectVectorVariable*		    lightDirVariable;
