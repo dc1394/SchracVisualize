@@ -34,9 +34,24 @@ struct SimpleVertex2
 #define DEG2RAD( a ) ( a * D3DX_PI / 180.f )
 
 class TDXScene final {
-    // #region コンストラクタ・デストラクタ
+    // #region 列挙型
 
 public:
+    //! A enumerated type
+    /*!
+        実部か虚部かを表す列挙型
+    */
+    enum class Re_Im_type {
+        // 実部
+        REAL,
+        // 虚部
+        IMAGINARY
+    };
+
+    // #endregion 列挙型
+
+    // #region コンストラクタ・デストラクタ
+
     //! A constructor.
     /*!
         唯一のコンストラクタ
@@ -53,7 +68,6 @@ public:
 
     // #region メンバ関数
 	
-public:
     static void operator delete(void* p, void* buf){}
 
     HRESULT Init(ID3D10Device* pd3dDevice);
@@ -66,18 +80,22 @@ public:
     // ! A public member function.
     /*!
         再描画する
+        \param m 磁気量子数
         \param pd3dDevice DirectXデバイスへのスマートポインタ
+        \param reim 実部を描画するか、虚部を描画するか
         \return 再描画が成功したかどうか
     */
-    HRESULT Redraw(ID3D10Device * pd3dDevice);
+    HRESULT Redraw(std::int32_t m, ID3D10Device * pd3dDevice, TDXScene::Re_Im_type reim);
 
 private:
     // ! A private member function.
     /*!
         SimpleVertex2にデータを詰める
+        \param m 磁気量子数
+        \param reim 実部を描画するか、虚部を描画するか
         \param ver 対象のSimpleVertex2
     */
-    void FillSimpleVertex2(SimpleVertex2 & ver);
+    void FillSimpleVertex2(std::int32_t m, TDXScene::Re_Im_type reim, SimpleVertex2 & ver);
     
     // #endregion メンバ関数
 

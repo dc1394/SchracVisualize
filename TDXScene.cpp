@@ -3,8 +3,9 @@
 #include "myrandom/myrand.h"
 #include "resource.h"
 #include "TDXScene.h"
+#include <boost/assert.hpp>                                     // for BOOST_ASSERT
 #include <boost/math/special_functions/spherical_harmonic.hpp>  // for boost::math::spherical_harmonic
-#include <gsl/gsl_sf_legendre.h>
+#include <gsl/gsl_sf_legendre.h>                                // for gsl_sf_legendre_sphPlm
 #include <tbb/parallel_for.h>                                   // for tbb::parallel_for
 #include <tbb/partitioner.h>                                    // for tbb::auto_partitioner
 #include <tbb/task_scheduler_init.h>                            // for tbb::task_scheduler_init
@@ -22,7 +23,7 @@ TDXScene::TDXScene(std::shared_ptr<getdata::GetData> const & pgd) :
 {
 }
 
-void TDXScene::FillSimpleVertex2(SimpleVertex2 & ver)
+void TDXScene::FillSimpleVertex2(std::int32_t m, TDXScene::Re_Im_type reim, SimpleVertex2 & ver)
 {
     auto sign = 0;
     auto p = 0.0, pp = 0.0;
@@ -32,7 +33,7 @@ void TDXScene::FillSimpleVertex2(SimpleVertex2 & ver)
 
     auto const n = static_cast<double>(pgd_->N);
     auto const rmax = (2.3622 * n + 3.3340) * n + 1.3228;
-    MyRand mr(-rmax, rmax); 
+    MyRand mr(-rmax, rmax);
     MyRand mr2(pgd_->Funcmin, pgd_->Funcmax);
 
     do {
@@ -50,14 +51,34 @@ void TDXScene::FillSimpleVertex2(SimpleVertex2 & ver)
 
         switch (pgd_->Rho_wf_type_) {
         case getdata::GetData::Rho_Wf_type::RHO:
-            pp = (*pgd_)(r) * gsl_sf_legendre_sphPlm(pgd_->L, 0, z / r);
+            pp = (*pgd_)(r) * gsl_sf_legendre_sphPlm(pgd_->L, m, z / r);
             pp *= pp;
             break;
 
         case getdata::GetData::Rho_Wf_type::WF:
+        {
             auto const phi = std::acos(x / std::sqrt(x * x + y * y));
-            auto const ylm = boost::math::spherical_harmonic_r(pgd_->L, 0, std::acos(z / r), phi);
-            pp = (*pgd_)(r) * ylm;
+            double ylm = 0.0;
+            switch (reim) {
+            case TDXScene::Re_Im_type::REAL:
+                ylm = boost::math::spherical_harmonic_r(pgd_->L, m, std::acos(z / r), phi);
+                break;
+
+            case TDXScene::Re_Im_type::IMAGINARY:
+                ylm = boost::math::spherical_harmonic_i(pgd_->L, m, std::acos(z / r), phi);
+                break;
+
+            default:
+                BOOST_ASSERT(!"‰½‚©‚ª‚¨‚©‚µ‚¢!");
+                break;
+            }
+
+            pp = (*pgd_)(r)* ylm;
+        }
+            break;
+            
+        default:
+            BOOST_ASSERT(!"‰½‚©‚ª‚¨‚©‚µ‚¢!");
             break;
         }
 
@@ -128,12 +149,14 @@ HRESULT TDXScene::Init(ID3D10Device* pd3dDevice)
         { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D10_INPUT_PER_VERTEX_DATA, 0 },
         { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D10_INPUT_PER_VERTEX_DATA, 0 },
     };
+
     auto const numElements = sizeof( layout ) / sizeof( layout[0] );
 
     // Create the input layout
     D3D10_PASS_DESC PassDesc;
     technique->GetPassByIndex( 0 )->GetDesc( &PassDesc );
     ID3D10InputLayout * pVertexLayout;
+    
     if (!utility::v_return(
         pd3dDevice->CreateInputLayout(
         layout,
@@ -143,12 +166,13 @@ HRESULT TDXScene::Init(ID3D10Device* pd3dDevice)
         &pVertexLayout))) {
         return S_FALSE;
     }
+
     vertexLayout.reset(pVertexLayout);
 
     // Set the input layout
     pd3dDevice->IASetInputLayout( vertexLayout.get() );
 
-    Redraw(pd3dDevice);
+    Redraw(0, pd3dDevice, TDXScene::Re_Im_type::REAL);
 
     // Set primitive topology
     pd3dDevice->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_POINTLIST);
@@ -245,7 +269,7 @@ HRESULT TDXScene::MsgPrc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
     return camera.HandleMessages( hWnd, uMsg, wParam, lParam );
 }
 
-HRESULT TDXScene::Redraw(ID3D10Device* pd3dDevice)
+HRESULT TDXScene::Redraw(std::int32_t m, ID3D10Device * pd3dDevice, TDXScene::Re_Im_type reim)
 {
     tbb::task_scheduler_init init;
 
@@ -253,7 +277,7 @@ HRESULT TDXScene::Redraw(ID3D10Device* pd3dDevice)
         std::uint32_t(0),
         N,
         std::uint32_t(1),
-        [this](std::uint32_t i) { FillSimpleVertex2(vertices[i]); },
+        [this, m, reim](std::uint32_t i) { FillSimpleVertex2(m, reim, vertices[i]); },
         tbb::auto_partitioner());
 
     D3D10_BUFFER_DESC bd;

@@ -13,6 +13,7 @@
 #include "TDXScene.h"
 #include "resource.h"
 #include <malloc.h>
+#include <string>       // for std::wstring, std::to_string
 
 #define DEG2RAD( a ) ( a * D3DX_PI / 180.f )
 
@@ -52,13 +53,23 @@ std::unique_ptr<ID3DX10Sprite, utility::Safe_Release<ID3DX10Sprite>> sprite;
 
 bool	ROT_FLAG = true;
 
-bool redraw = false;
+//! A global variable.
+/*!
+    描画する軌道の識別数値
+*/
+std::uint32_t drawdata = 0U;
 
-// !A global variable.
+//! A global variable.
 /*!
     データオブジェクト
 */
-std::shared_ptr<getdata::GetData> pgd_;
+std::shared_ptr<getdata::GetData> pgd;
+
+//! A global variable.
+/*!
+    再描画するかどうか
+*/
+bool redraw = false;
 
 //--------------------------------------------------------------------------------------
 // UI control IDs
@@ -94,7 +105,6 @@ void CALLBACK OnGUIEvent( UINT nEvent, int nControlID, CDXUTControl* pControl, v
 //--------------------------------------------------------------------------------------
 void InitApp()
 {
-
     g_D3DSettingsDlg.Init( &g_DialogResourceManager );
     g_HUD.Init( &g_DialogResourceManager );
 
@@ -103,17 +113,69 @@ void InitApp()
     g_HUD.AddButton( IDC_CHANGEDEVICE, L"Change device (F2)", 35, iY += 24, 125, 22, VK_F2 );
     g_HUD.AddButton( IDC_TOGGLEROTATION, L"Toggle Rotaion Animation", 35, iY += 24, 125, 22 );
 
+    while (true) {
+        try {
+            pgd = std::make_shared<getdata::GetData>(utility::myOpenFile());
+        }
+        catch (std::runtime_error const & e) {
+            ::MessageBox(nullptr, utility::my_mbstowcs(e.what()).c_str(), L"エラー", MB_OK | MB_ICONWARNING);
+            continue;
+        }
+        break;
+    }
+
     // Combobox
     CDXUTComboBox* pCombo;
     g_HUD.AddComboBox(IDC_COMBOBOX, 35, iY += 34, 125, 22, L'O', false, &pCombo);
     if (pCombo)
     {
         pCombo->SetDropHeight(100);
-        pCombo->AddItem(L"Combobox item (O)", (LPVOID)0x11111111);
-        pCombo->AddItem(L"Placeholder (O)", (LPVOID)0x12121212);
-        pCombo->AddItem(L"One more (O)", (LPVOID)0x13131313);
-        pCombo->AddItem(L"I can't get enough (O)", (LPVOID)0x14141414);
-        pCombo->AddItem(L"Ok, last one, I promise (O)", (LPVOID)0x15151515);
+        BOOST_ASSERT(pgd->N > static_cast<std::int32_t>(pgd->L));
+        switch (pgd->L) {
+        case 0:
+        {
+            auto const orbital(std::to_wstring(pgd->N) + L's');
+            pCombo->AddItem(orbital.c_str(), reinterpret_cast<LPVOID>(0x11111111));
+        }
+        break;
+
+        case 1:
+        {
+            auto orbital(std::to_wstring(pgd->N));
+            pCombo->AddItem((orbital + L"px").c_str(), reinterpret_cast<LPVOID>(0x11111111));
+            pCombo->AddItem((orbital + L"py").c_str(), reinterpret_cast<LPVOID>(0x12121212));
+            pCombo->AddItem((orbital + L"pz").c_str(), reinterpret_cast<LPVOID>(0x13131313));
+        }
+        break;
+
+        case 2:
+        {
+            auto orbital(std::to_wstring(pgd->N));
+            pCombo->AddItem((orbital + L"dxy").c_str(), reinterpret_cast<LPVOID>(0x11111111));
+            pCombo->AddItem((orbital + L"dyz").c_str(), reinterpret_cast<LPVOID>(0x12121212));
+            pCombo->AddItem((orbital + L"dzx").c_str(), reinterpret_cast<LPVOID>(0x13131313));
+            pCombo->AddItem((orbital + L"dx^2-y^2").c_str(), reinterpret_cast<LPVOID>(0x14141414));
+            pCombo->AddItem((orbital + L"dz^2").c_str(), reinterpret_cast<LPVOID>(0x15151515));
+        }
+        break;
+
+        case 3:
+        {
+            auto orbital(std::to_wstring(pgd->N));
+            pCombo->AddItem((orbital + L"fxz^2").c_str(), reinterpret_cast<LPVOID>(0x11111111));
+            pCombo->AddItem((orbital + L"fyz^2").c_str(), reinterpret_cast<LPVOID>(0x12121212));
+            pCombo->AddItem((orbital + L"fz(x^2-y^2)").c_str(), reinterpret_cast<LPVOID>(0x13131313));
+            pCombo->AddItem((orbital + L"fxyz").c_str(), reinterpret_cast<LPVOID>(0x14141414));
+            pCombo->AddItem((orbital + L"fx(x^2-3y^2)").c_str(), reinterpret_cast<LPVOID>(0x15151515));
+            pCombo->AddItem((orbital + L"fy(3x^2-y^2)").c_str(), reinterpret_cast<LPVOID>(0x16161616));
+            pCombo->AddItem((orbital + L"fz^2").c_str(), reinterpret_cast<LPVOID>(0x17171717));
+        }
+        break;
+
+        default:
+            BOOST_ASSERT(!"量子数の指定が異常です！");
+            break;
+        }
     }
 }
 
@@ -150,20 +212,9 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdL
     DXUTSetCursorSettings( true, true ); // Show the cursor and clip it when in full screen
 
 	InitApp();
-	
-    while (true) {
-        try {
-            pgd_ = std::make_shared<getdata::GetData>(utility::myOpenFile());
-        }
-        catch (std::runtime_error const & e) {
-            ::MessageBox(nullptr, utility::my_mbstowcs(e.what()).c_str(), L"エラー", MB_OK | MB_ICONWARNING);
-            continue;
-        }
-        break;
-    }
 
     std::string windowtitle;
-    switch (pgd_->Rho_wf_type_) {
+    switch (pgd->Rho_wf_type_) {
     case getdata::GetData::Rho_Wf_type::RHO:
         windowtitle = "Electron density";
         break;
@@ -172,7 +223,7 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdL
         windowtitle = "Wavefunction";
         break;
     }
-    windowtitle += "in " + pgd_->Atomname() + " for " + pgd_->Orbital() + " orbital";
+    windowtitle += " in " + pgd->Atomname() + " for " + pgd->Orbital() + " orbital";
 
 	DXUTCreateWindow( utility::my_mbstowcs(windowtitle).c_str());
     DXUTCreateDevice( true, 640, 480 );
@@ -222,7 +273,7 @@ HRESULT CALLBACK OnD3D10CreateDevice( ID3D10Device* pd3dDevice, const DXGI_SURFA
     //g_pTxtHelper = new CDXUTTextHelper( NULL, NULL, g_pFont, g_pSprite, 15 );
     
     auto buf = _aligned_malloc(sizeof(TDXScene), 16);
-    scene.reset(new(buf) TDXScene(pgd_));
+    scene.reset(new(buf) TDXScene(pgd));
 	return scene->Init(pd3dDevice);
 }
 
@@ -282,7 +333,107 @@ void CALLBACK OnD3D10FrameRender( ID3D10Device* pd3dDevice, double fTime, float 
 	else
 	{
         if (redraw) {
-            scene->Redraw(pd3dDevice);
+            auto const index = drawdata & 0x0F;
+            switch (pgd->L) {
+            case 0:
+                scene->Redraw(0, pd3dDevice, TDXScene::Re_Im_type::REAL);
+                break;
+
+            case 1:
+            {
+                switch (index) {
+                case 1:
+                    scene->Redraw(1, pd3dDevice, TDXScene::Re_Im_type::REAL);
+                    break;
+
+                case 2:
+                    scene->Redraw(-1, pd3dDevice, TDXScene::Re_Im_type::REAL);
+                    break;
+
+                case 3:
+                    scene->Redraw(0, pd3dDevice, TDXScene::Re_Im_type::REAL);
+                    break;
+
+                default:
+                    BOOST_ASSERT(!"何かがおかしい！");
+                    break;
+                }
+            }
+            break;
+
+            case 2:
+            {
+                switch (index) {
+                case 1:
+                    scene->Redraw(-2, pd3dDevice, TDXScene::Re_Im_type::REAL);
+                    break;
+
+                case 2:
+                    scene->Redraw(-1, pd3dDevice, TDXScene::Re_Im_type::REAL);
+                    break;
+
+                case 3:
+                    scene->Redraw(1, pd3dDevice, TDXScene::Re_Im_type::REAL);
+                    break;
+
+                case 4:
+                    scene->Redraw(2, pd3dDevice, TDXScene::Re_Im_type::REAL);
+                    break;
+
+                case 5:
+                    scene->Redraw(0, pd3dDevice, TDXScene::Re_Im_type::REAL);
+                    break;
+                    
+                default:
+                    BOOST_ASSERT(!"何かがおかしい！");
+                    break;
+                }
+            }
+            break;
+
+            case 3:
+            {
+                switch (index) {
+                case 1:
+                    scene->Redraw(1, pd3dDevice, TDXScene::Re_Im_type::REAL);
+                    break;
+
+                case 2:
+                    scene->Redraw(-1, pd3dDevice, TDXScene::Re_Im_type::REAL);
+                    break;
+
+                case 3:
+                    scene->Redraw(2, pd3dDevice, TDXScene::Re_Im_type::REAL);
+                    break;
+
+                case 4:
+                    scene->Redraw(-2, pd3dDevice, TDXScene::Re_Im_type::REAL);
+                    break;
+
+                case 5:
+                    scene->Redraw(3, pd3dDevice, TDXScene::Re_Im_type::REAL);
+                    break;
+
+                case 6:
+                    scene->Redraw(-3, pd3dDevice, TDXScene::Re_Im_type::REAL);
+                    break;
+
+                case 7:
+                    scene->Redraw(0, pd3dDevice, TDXScene::Re_Im_type::REAL);
+                    break;
+
+                default:
+                    BOOST_ASSERT(!"何かがおかしい！");
+                    break;
+                }
+            }
+            break;
+
+            default:
+                BOOST_ASSERT(!"量子数の指定が異常です！");
+                break;
+            }
+            
             redraw = false;
         }
 		scene->OnRender( pd3dDevice, fTime, fElapsedTime, pUserContext );
@@ -404,9 +555,10 @@ void CALLBACK OnGUIEvent( UINT nEvent, int nControlID, CDXUTControl* pControl, v
 
         case IDC_COMBOBOX:
         {
-            DXUTComboBoxItem* pItem = ((CDXUTComboBox*)pControl)->GetSelectedItem();
+            auto const pItem = (static_cast<CDXUTComboBox *>(pControl))->GetSelectedItem();
             if (pItem)
             {
+                drawdata = reinterpret_cast<std::uint32_t>(pItem->pData);
                 redraw = true;
             }
             break;
