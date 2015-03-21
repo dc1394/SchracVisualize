@@ -122,7 +122,7 @@ HRESULT TDXScene::Init(ID3D10Device* pd3dDevice)
     ID3D10Effect * effecttmp;
 
     auto hr = D3DX10CreateEffectFromFile(
-            L"DxClassTest.fx",
+            L"SchracVisualize.fx",
             nullptr,
             nullptr,
             "fx_4_0",

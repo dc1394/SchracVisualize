@@ -384,7 +384,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="DxClassMain.cpp" />
+    <ClCompile Include="SchracVisualizeMain.cpp" />
     <ClCompile Include="getdata\getdata.cpp" />
     <ClCompile Include="getdata\readdatafile.cpp" />
     <ClCompile Include="myrandom\myrand.cpp" />
@@ -394,10 +394,11 @@
     <ClInclude Include="getdata\getdata.h" />
     <ClInclude Include="getdata\readdatafile.h" />
     <ClInclude Include="myrandom\myrand.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="TDXScene.h" />
     <ClInclude Include="utility\property.h" />
     <ClInclude Include="utility\utility.h" />
-    <None Include="DxClassTest.fx" />
+    <None Include="SchracVisualize.fx" />
     <None Include="DXUT\Optional\directx.ico" />
     <ClInclude Include="DXUT\Core\DXUT.h" />
     <ClInclude Include="DXUT\Core\DXUTenum.h" />
@@ -421,12 +422,8 @@
     <ClCompile Include="DXUT\Optional\SDKmisc.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="EmptyProject9.cpp" />
   </ItemGroup>
   <ItemGroup>
-  </ItemGroup>
-  <ItemGroup>
-    <CLInclude Include="resource.h" />
     <ResourceCompile Include="SchracVisualize.rc" />
   </ItemGroup>
   <ItemGroup>

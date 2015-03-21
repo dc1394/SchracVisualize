@@ -80,12 +80,11 @@
     <ClCompile Include="DXUT\Optional\SDKmisc.cpp">
       <Filter>DXUT</Filter>
     </ClCompile>
-    <None Include="DxClassTest.fx">
+    <None Include="SchracVisualize.fx">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="EmptyProject9.cpp" />
     <ClCompile Include="myrandom\myrand.cpp">
       <Filter>myrandom</Filter>
     </ClCompile>
@@ -99,7 +98,7 @@
     <ClCompile Include="utility\utility.cpp">
       <Filter>utility</Filter>
     </ClCompile>
-    <ClCompile Include="DxClassMain.cpp" />
+    <ClCompile Include="SchracVisualizeMain.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="myrandom\myrand.h">
@@ -121,11 +120,11 @@
     <ClInclude Include="utility\property.h">
       <Filter>utility</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <CLInclude Include="resource.h">
-      <Filter>Resource Files</Filter>
-    </CLInclude>
     <ResourceCompile Include="SchracVisualize.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>

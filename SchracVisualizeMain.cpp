@@ -1,4 +1,4 @@
-﻿/*! \file DxClassMain.cpp
+﻿/*! \file SchracVisualizeMain.cpp
     \brief メインファイル
 
     Copyright ©  2015 @dc1394 All Rights Reserved.
@@ -13,7 +13,7 @@
 #include "SDKmisc.h"
 #include "TDXScene.h"
 #include "resource.h"
-#include <malloc.h>
+#include <malloc.h>     // for _aligned_malloc, _aligned_free 
 #include <string>       // for std::wstring, std::to_string
 
 #define DEG2RAD( a ) ( a * D3DX_PI / 180.f )

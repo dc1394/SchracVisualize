@@ -1,6 +1,5 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by DxHydrogen.rc
 //
 #define IDI_MAIN_ICON                   101
 
