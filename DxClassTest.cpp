@@ -17,7 +17,7 @@
 
 #define DEG2RAD( a ) ( a * D3DX_PI / 180.f )
 
-// !A global variable.
+//! A global variable.
 /*!
     _aligned_mallocで確保されたメモリを解放するラムダ式
     \param ptr _aligned_malloc _aligned_mallocで確保されたメモリへの先頭ポインタ
@@ -29,25 +29,11 @@ auto const aligned_deleter = [](TDXScene * ptr)
     ptr = nullptr;
 };
 
-std::unique_ptr<TDXScene, decltype(aligned_deleter)> scene;
-
 D3DXVECTOR4                         g_vMeshColor( 0.7f, 0.7f, 0.7f, 1.0f );
 
 CDXUTDialogResourceManager          g_DialogResourceManager;// manager for shared resources of dialogs
 CD3DSettingsDlg                     g_D3DSettingsDlg;       // Device settings dialog
 CDXUTDialog                         g_HUD;                  // manages the 3D UI
-
-// !A global variable.
-/*!
-    Font for drawing text
-*/
-std::unique_ptr<ID3DX10Font, utility::Safe_Release<ID3DX10Font>> font;
-
-// !A global variable.
-/*!
-    Sprite for batching text drawing
-*/
-std::unique_ptr<ID3DX10Sprite, utility::Safe_Release<ID3DX10Sprite>> sprite;
 
 //CDXUTTextHelper*                    g_pTxtHelper = NULL;
 
@@ -57,7 +43,13 @@ bool	ROT_FLAG = true;
 /*!
     描画する軌道の識別数値
 */
-std::uint32_t drawdata = 0U;
+auto drawdata = 1U;
+
+//! A global variable.
+/*!
+Font for drawing text
+*/
+std::unique_ptr<ID3DX10Font, utility::Safe_Release<ID3DX10Font>> font;
 
 //! A global variable.
 /*!
@@ -67,9 +59,28 @@ std::shared_ptr<getdata::GetData> pgd;
 
 //! A global variable.
 /*!
+    描画クラスのオブジェクトへのスマートポインタ
+*/
+std::unique_ptr<TDXScene, decltype(aligned_deleter)> scene;
+
+//! A global variable.
+/*!
+    Sprite for batching text drawing
+*/
+std::unique_ptr<ID3DX10Sprite, utility::Safe_Release<ID3DX10Sprite>> sprite;
+
+//! A global variable.
+/*!
     再描画するかどうか
 */
-bool redraw = false;
+auto redraw = false;
+
+//! A global variable.
+/*!
+    実部と虚部のどちらを描画するか
+*/
+auto reim = TDXScene::Re_Im_type::REAL;
+
 
 //--------------------------------------------------------------------------------------
 // UI control IDs
@@ -77,7 +88,10 @@ bool redraw = false;
 #define IDC_TOGGLEFULLSCREEN    1
 #define IDC_CHANGEDEVICE        2
 #define IDC_TOGGLEROTATION      3
-#define IDC_COMBOBOX            4
+#define IDC_READDATA            4
+#define IDC_COMBOBOX            5
+#define IDC_RADIOA              6
+#define IDC_RADIOB              7
 
 //--------------------------------------------------------------------------------------
 // Forward declarations 
@@ -99,6 +113,24 @@ void CALLBACK OnFrameMove( double fTime, float fElapsedTime, void* pUserContext 
 bool CALLBACK ModifyDeviceSettings( DXUTDeviceSettings* pDeviceSettings, void* pUserContext );
 void CALLBACK OnGUIEvent( UINT nEvent, int nControlID, CDXUTControl* pControl, void* pUserContext );
 
+//! A function.
+/*!
+    ウィンドウタイトルを生成する
+    \return ウィンドウタイトル
+*/
+std::wstring CreateWindowTitle();
+
+//! A function.
+/*!
+    テキストファイルからデータを読み込む
+*/
+void ReadData();
+
+//! A function.
+/*!
+    UIを配置する
+*/
+void SetUI();
 
 //--------------------------------------------------------------------------------------
 // Initialize the app 
@@ -108,75 +140,10 @@ void InitApp()
     g_D3DSettingsDlg.Init( &g_DialogResourceManager );
     g_HUD.Init( &g_DialogResourceManager );
 
-    g_HUD.SetCallback( OnGUIEvent ); int iY = 10;
-    g_HUD.AddButton( IDC_TOGGLEFULLSCREEN, L"Toggle full screen", 35, iY, 125, 22 );
-    g_HUD.AddButton( IDC_CHANGEDEVICE, L"Change device (F2)", 35, iY += 24, 125, 22, VK_F2 );
-    g_HUD.AddButton( IDC_TOGGLEROTATION, L"Toggle Rotaion Animation", 35, iY += 24, 125, 22 );
-
-    while (true) {
-        try {
-            pgd = std::make_shared<getdata::GetData>(utility::myOpenFile());
-        }
-        catch (std::runtime_error const & e) {
-            ::MessageBox(nullptr, utility::my_mbstowcs(e.what()).c_str(), L"エラー", MB_OK | MB_ICONWARNING);
-            continue;
-        }
-        break;
-    }
-
-    // Combobox
-    CDXUTComboBox* pCombo;
-    g_HUD.AddComboBox(IDC_COMBOBOX, 35, iY += 34, 125, 22, L'O', false, &pCombo);
-    if (pCombo)
-    {
-        pCombo->SetDropHeight(100);
-        BOOST_ASSERT(pgd->N > static_cast<std::int32_t>(pgd->L));
-        switch (pgd->L) {
-        case 0:
-        {
-            auto const orbital(std::to_wstring(pgd->N) + L's');
-            pCombo->AddItem(orbital.c_str(), reinterpret_cast<LPVOID>(0x11111111));
-        }
-        break;
-
-        case 1:
-        {
-            auto orbital(std::to_wstring(pgd->N));
-            pCombo->AddItem((orbital + L"px").c_str(), reinterpret_cast<LPVOID>(0x11111111));
-            pCombo->AddItem((orbital + L"py").c_str(), reinterpret_cast<LPVOID>(0x12121212));
-            pCombo->AddItem((orbital + L"pz").c_str(), reinterpret_cast<LPVOID>(0x13131313));
-        }
-        break;
-
-        case 2:
-        {
-            auto orbital(std::to_wstring(pgd->N));
-            pCombo->AddItem((orbital + L"dxy").c_str(), reinterpret_cast<LPVOID>(0x11111111));
-            pCombo->AddItem((orbital + L"dyz").c_str(), reinterpret_cast<LPVOID>(0x12121212));
-            pCombo->AddItem((orbital + L"dzx").c_str(), reinterpret_cast<LPVOID>(0x13131313));
-            pCombo->AddItem((orbital + L"dx^2-y^2").c_str(), reinterpret_cast<LPVOID>(0x14141414));
-            pCombo->AddItem((orbital + L"dz^2").c_str(), reinterpret_cast<LPVOID>(0x15151515));
-        }
-        break;
-
-        case 3:
-        {
-            auto orbital(std::to_wstring(pgd->N));
-            pCombo->AddItem((orbital + L"fxz^2").c_str(), reinterpret_cast<LPVOID>(0x11111111));
-            pCombo->AddItem((orbital + L"fyz^2").c_str(), reinterpret_cast<LPVOID>(0x12121212));
-            pCombo->AddItem((orbital + L"fz(x^2-y^2)").c_str(), reinterpret_cast<LPVOID>(0x13131313));
-            pCombo->AddItem((orbital + L"fxyz").c_str(), reinterpret_cast<LPVOID>(0x14141414));
-            pCombo->AddItem((orbital + L"fx(x^2-3y^2)").c_str(), reinterpret_cast<LPVOID>(0x15151515));
-            pCombo->AddItem((orbital + L"fy(3x^2-y^2)").c_str(), reinterpret_cast<LPVOID>(0x16161616));
-            pCombo->AddItem((orbital + L"fz^2").c_str(), reinterpret_cast<LPVOID>(0x17171717));
-        }
-        break;
-
-        default:
-            BOOST_ASSERT(!"量子数の指定が異常です！");
-            break;
-        }
-    }
+    g_HUD.SetCallback( OnGUIEvent ); 
+    
+    ReadData();
+    SetUI();    
 }
 
 
@@ -213,26 +180,13 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdL
 
 	InitApp();
 
-    std::string windowtitle;
-    switch (pgd->Rho_wf_type_) {
-    case getdata::GetData::Rho_Wf_type::RHO:
-        windowtitle = "Electron density";
-        break;
 
-    case getdata::GetData::Rho_Wf_type::WF:
-        windowtitle = "Wavefunction";
-        break;
-    }
-    windowtitle += " in " + pgd->Atomname() + " for " + pgd->Orbital() + " orbital";
 
-	DXUTCreateWindow( utility::my_mbstowcs(windowtitle).c_str());
+    DXUTCreateWindow(CreateWindowTitle().c_str());
     DXUTCreateDevice( true, 640, 480 );
-//    DXUTCreateDevice( false);
 
 	DXUTDeviceSettings ds;
 	ds = DXUTGetDeviceSettings();
-//	ds.d3d10.SyncInterval = 1;
-//	DXUTCreateDeviceFromSettings( &ds);
 
     DXUTMainLoop(); // Enter into the DXUT render loop
 
@@ -302,17 +256,6 @@ HRESULT CALLBACK OnD3D10ResizedSwapChain( ID3D10Device* pd3dDevice, IDXGISwapCha
 //--------------------------------------------------------------------------------------
 void RenderText( double fTime)
 {
-	//char buf[1000];
-	//WCHAR	wbuf[1000];
-	//memset( wbuf, 0, sizeof(wbuf));
- //   g_pTxtHelper->Begin();
- //   g_pTxtHelper->SetInsertionPos( 2, 0 );
- //   g_pTxtHelper->SetForegroundColor( D3DXCOLOR( 1.0f, 1.0f, 0.0f, 1.0f ) );
-	//sprintf_s( buf, "time = %f", fTime);
- //   std::locale::global(std::locale("japanese"));
-	//MultiByteToWideChar( CP_ACP, 0, buf, strlen(buf), wbuf, sizeof(wbuf));
- //   g_pTxtHelper->DrawTextLine( wbuf );
- //   g_pTxtHelper->End();
 }
 
 
@@ -336,22 +279,22 @@ void CALLBACK OnD3D10FrameRender( ID3D10Device* pd3dDevice, double fTime, float 
             auto const index = drawdata & 0x0F;
             switch (pgd->L) {
             case 0:
-                scene->Redraw(0, pd3dDevice, TDXScene::Re_Im_type::REAL);
+                scene->Redraw(0, pd3dDevice, reim);
                 break;
 
             case 1:
             {
                 switch (index) {
                 case 1:
-                    scene->Redraw(1, pd3dDevice, TDXScene::Re_Im_type::REAL);
+                    scene->Redraw(1, pd3dDevice, reim);
                     break;
 
                 case 2:
-                    scene->Redraw(-1, pd3dDevice, TDXScene::Re_Im_type::REAL);
+                    scene->Redraw(-1, pd3dDevice, reim);
                     break;
 
                 case 3:
-                    scene->Redraw(0, pd3dDevice, TDXScene::Re_Im_type::REAL);
+                    scene->Redraw(0, pd3dDevice, reim);
                     break;
 
                 default:
@@ -365,23 +308,23 @@ void CALLBACK OnD3D10FrameRender( ID3D10Device* pd3dDevice, double fTime, float 
             {
                 switch (index) {
                 case 1:
-                    scene->Redraw(-2, pd3dDevice, TDXScene::Re_Im_type::REAL);
+                    scene->Redraw(-2, pd3dDevice, reim);
                     break;
 
                 case 2:
-                    scene->Redraw(-1, pd3dDevice, TDXScene::Re_Im_type::REAL);
+                    scene->Redraw(-1, pd3dDevice, reim);
                     break;
 
                 case 3:
-                    scene->Redraw(1, pd3dDevice, TDXScene::Re_Im_type::REAL);
+                    scene->Redraw(1, pd3dDevice, reim);
                     break;
 
                 case 4:
-                    scene->Redraw(2, pd3dDevice, TDXScene::Re_Im_type::REAL);
+                    scene->Redraw(2, pd3dDevice, reim);
                     break;
 
                 case 5:
-                    scene->Redraw(0, pd3dDevice, TDXScene::Re_Im_type::REAL);
+                    scene->Redraw(0, pd3dDevice, reim);
                     break;
                     
                 default:
@@ -395,31 +338,31 @@ void CALLBACK OnD3D10FrameRender( ID3D10Device* pd3dDevice, double fTime, float 
             {
                 switch (index) {
                 case 1:
-                    scene->Redraw(1, pd3dDevice, TDXScene::Re_Im_type::REAL);
+                    scene->Redraw(1, pd3dDevice, reim);
                     break;
 
                 case 2:
-                    scene->Redraw(-1, pd3dDevice, TDXScene::Re_Im_type::REAL);
+                    scene->Redraw(-1, pd3dDevice, reim);
                     break;
 
                 case 3:
-                    scene->Redraw(2, pd3dDevice, TDXScene::Re_Im_type::REAL);
+                    scene->Redraw(2, pd3dDevice, reim);
                     break;
 
                 case 4:
-                    scene->Redraw(-2, pd3dDevice, TDXScene::Re_Im_type::REAL);
+                    scene->Redraw(-2, pd3dDevice, reim);
                     break;
 
                 case 5:
-                    scene->Redraw(3, pd3dDevice, TDXScene::Re_Im_type::REAL);
+                    scene->Redraw(3, pd3dDevice, reim);
                     break;
 
                 case 6:
-                    scene->Redraw(-3, pd3dDevice, TDXScene::Re_Im_type::REAL);
+                    scene->Redraw(-3, pd3dDevice, reim);
                     break;
 
                 case 7:
-                    scene->Redraw(0, pd3dDevice, TDXScene::Re_Im_type::REAL);
+                    scene->Redraw(0, pd3dDevice, reim);
                     break;
 
                 default:
@@ -436,9 +379,9 @@ void CALLBACK OnD3D10FrameRender( ID3D10Device* pd3dDevice, double fTime, float 
             
             redraw = false;
         }
-		scene->OnRender( pd3dDevice, fTime, fElapsedTime, pUserContext );
+
+        scene->OnRender( pd3dDevice, fTime, fElapsedTime, pUserContext );
 	    g_HUD.OnRender( fElapsedTime );
-		//RenderText(fTime);
 	}
 }
 
@@ -461,9 +404,6 @@ void CALLBACK OnD3D10DestroyDevice( void* pUserContext )
     g_DialogResourceManager.OnD3D10DestroyDevice();
     g_D3DSettingsDlg.OnD3D10DestroyDevice();
     DXUTGetGlobalResourceCache().OnDestroyDevice();
-    //SAFE_RELEASE( g_pFont );
-    //SAFE_RELEASE( g_pSprite );
-    //SAFE_DELETE( g_pTxtHelper );
 
     scene.reset();
 }
@@ -553,6 +493,14 @@ void CALLBACK OnGUIEvent( UINT nEvent, int nControlID, CDXUTControl* pControl, v
 			ROT_FLAG = !ROT_FLAG;
             break;
 
+        case IDC_READDATA:
+            ReadData();
+            SetUI();
+            scene->Pgd = pgd;
+            redraw = true;
+            ::SetWindowText(DXUTGetHWND(), CreateWindowTitle().c_str());
+            break;
+
         case IDC_COMBOBOX:
         {
             auto const pItem = (static_cast<CDXUTComboBox *>(pControl))->GetSelectedItem();
@@ -563,7 +511,126 @@ void CALLBACK OnGUIEvent( UINT nEvent, int nControlID, CDXUTControl* pControl, v
             }
             break;
         }
+
+        case IDC_RADIOA:
+            reim = TDXScene::Re_Im_type::REAL;
+            redraw = true;
+            break;
+
+        case IDC_RADIOB:
+            reim = TDXScene::Re_Im_type::IMAGINARY;
+            redraw = true;
+            break;
+
+        default:
+            break;
     }
 }
 
+
+std::wstring CreateWindowTitle()
+{
+    std::string windowtitle;
+    switch (pgd->Rho_wf_type_) {
+    case getdata::GetData::Rho_Wf_type::RHO:
+        windowtitle = "Electron density";
+        break;
+
+    case getdata::GetData::Rho_Wf_type::WF:
+        windowtitle = "Wavefunction";
+        break;
+    }
+    windowtitle += " in " + pgd->Atomname() + " for " + pgd->Orbital() + " orbital";
+
+    return utility::my_mbstowcs(windowtitle);
+}
+
+
+void ReadData()
+{
+    while (true) {
+        try {
+            pgd.reset();
+            pgd = std::make_shared<getdata::GetData>(utility::myOpenFile());
+        }
+        catch (std::runtime_error const & e) {
+            ::MessageBox(nullptr, utility::my_mbstowcs(e.what()).c_str(), L"エラー", MB_OK | MB_ICONWARNING);
+            continue;
+        }
+        break;
+    }
+}
+
+
+void SetUI()
+{
+    g_HUD.RemoveAllControls();
+
+    std::int32_t iY = 10;
+
+    g_HUD.AddButton(IDC_TOGGLEFULLSCREEN, L"Toggle full screen", 35, iY, 125, 22);
+    g_HUD.AddButton(IDC_CHANGEDEVICE, L"Change device (F2)", 35, iY += 24, 125, 22, VK_F2);
+    g_HUD.AddButton(IDC_TOGGLEROTATION, L"Toggle Rotaion Animation", 35, iY += 24, 125, 22);
+
+    g_HUD.AddButton(IDC_READDATA, L"新規ファイル読み込み", 35, iY += 34, 125, 22);
+
+    // Combobox
+    CDXUTComboBox* pCombo;
+    g_HUD.AddComboBox(IDC_COMBOBOX, 35, iY += 34, 125, 22, L'O', false, &pCombo);
+    if (pCombo)
+    {
+        pCombo->SetDropHeight(100);
+        pCombo->RemoveAllItems();
+        BOOST_ASSERT(pgd->N > static_cast<std::int32_t>(pgd->L));
+        auto orbital(std::to_wstring(pgd->N));
+        switch (pgd->L) {
+        case 0:
+        {
+            orbital += L's';
+            pCombo->AddItem(orbital.c_str(), reinterpret_cast<LPVOID>(0x11111111));
+        }
+        break;
+
+        case 1:
+        {
+            pCombo->AddItem((orbital + L"px").c_str(), reinterpret_cast<LPVOID>(0x11111111));
+            pCombo->AddItem((orbital + L"py").c_str(), reinterpret_cast<LPVOID>(0x12121212));
+            pCombo->AddItem((orbital + L"pz").c_str(), reinterpret_cast<LPVOID>(0x13131313));
+        }
+        break;
+
+        case 2:
+        {
+            pCombo->AddItem((orbital + L"dxy").c_str(), reinterpret_cast<LPVOID>(0x11111111));
+            pCombo->AddItem((orbital + L"dyz").c_str(), reinterpret_cast<LPVOID>(0x12121212));
+            pCombo->AddItem((orbital + L"dzx").c_str(), reinterpret_cast<LPVOID>(0x13131313));
+            pCombo->AddItem((orbital + L"dx^2-y^2").c_str(), reinterpret_cast<LPVOID>(0x14141414));
+            pCombo->AddItem((orbital + L"dz^2").c_str(), reinterpret_cast<LPVOID>(0x15151515));
+        }
+        break;
+
+        case 3:
+        {
+            pCombo->AddItem((orbital + L"fxz^2").c_str(), reinterpret_cast<LPVOID>(0x11111111));
+            pCombo->AddItem((orbital + L"fyz^2").c_str(), reinterpret_cast<LPVOID>(0x12121212));
+            pCombo->AddItem((orbital + L"fz(x^2-y^2)").c_str(), reinterpret_cast<LPVOID>(0x13131313));
+            pCombo->AddItem((orbital + L"fxyz").c_str(), reinterpret_cast<LPVOID>(0x14141414));
+            pCombo->AddItem((orbital + L"fx(x^2-3y^2)").c_str(), reinterpret_cast<LPVOID>(0x15151515));
+            pCombo->AddItem((orbital + L"fy(3x^2-y^2)").c_str(), reinterpret_cast<LPVOID>(0x16161616));
+            pCombo->AddItem((orbital + L"fz^2").c_str(), reinterpret_cast<LPVOID>(0x17171717));
+        }
+        break;
+
+        default:
+            throw std::runtime_error("g以上の軌道には対応していません");
+            break;
+        }
+
+        if (pgd->Rho_wf_type_ == getdata::GetData::Rho_Wf_type::WF) {
+            // Radio buttons
+            g_HUD.AddRadioButton(IDC_RADIOA, 1, L"実部", 35, iY += 34, 125, 22, true, L'1');
+            g_HUD.AddRadioButton(IDC_RADIOB, 1, L"虚部", 35, iY += 28, 125, 22, false, L'2');
+        }
+    }
+}
 

@@ -10,12 +10,14 @@ Copyright © 2015 @dc1394 All Rights Reserved.
 #pragma once
 
 #include "deleter.h"
-#include "property.h"
+#include "../utility/property.h"
 #include <cstdint>      // for std::int32_t, std::uint32_t
 #include <memory>       // for std::unique_ptr
 #include <string>       // for std::string
 
 namespace getdata {
+    using namespace utility;
+
     //! A class.
     /*!
         rのメッシュと、そのメッシュにおける動径波動関数を与えるクラス
@@ -68,7 +70,7 @@ namespace getdata {
         
         // #region プロパティ
 
-        //!  A property.
+        //! A property.
         /*!
             元素名
         */

@@ -11,6 +11,7 @@
 #include <tbb/task_scheduler_init.h>                            // for tbb::task_scheduler_init
 
 TDXScene::TDXScene(std::shared_ptr<getdata::GetData> const & pgd) :
+    Pgd(nullptr, [this](std::shared_ptr<getdata::GetData> const & val) { return pgd_ = val; }),
     lightDirVariable(nullptr),
     meshColor(0.7f, 0.7f, 0.7f, 1.0f),
     meshColorVariable(nullptr),
@@ -36,7 +37,7 @@ void TDXScene::FillSimpleVertex2(std::int32_t m, TDXScene::Re_Im_type reim, Simp
     MyRand mr(-rmax, rmax);
     MyRand mr2(pgd_->Funcmin, pgd_->Funcmax);
 
-    do {
+    for (auto i = 0; i < LOOPMAX; i++) {
         x = mr.myrand();
         y = mr.myrand();
         z = mr.myrand();
@@ -83,7 +84,11 @@ void TDXScene::FillSimpleVertex2(std::int32_t m, TDXScene::Re_Im_type reim, Simp
         }
 
         sign = (pp > 0.0) - (pp < 0.0);
-    } while (std::fabs(pp) < std::fabs(p));
+
+        if (std::fabs(pp) >= std::fabs(p)) {
+            break;
+        }
+    }
 
     ver.Pos.x = static_cast<float>(x);
     ver.Pos.y = static_cast<float>(y);

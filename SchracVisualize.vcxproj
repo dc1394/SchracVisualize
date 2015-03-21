@@ -392,10 +392,10 @@
     <ClCompile Include="utility\utility.cpp" />
     <ClInclude Include="getdata\deleter.h" />
     <ClInclude Include="getdata\getdata.h" />
-    <ClInclude Include="getdata\property.h" />
     <ClInclude Include="getdata\readdatafile.h" />
     <ClInclude Include="myrandom\myrand.h" />
     <ClInclude Include="TDXScene.h" />
+    <ClInclude Include="utility\property.h" />
     <ClInclude Include="utility\utility.h" />
     <None Include="DxClassTest.fx" />
     <None Include="SchracVisualize.txt" />

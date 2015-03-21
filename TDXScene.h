@@ -12,6 +12,7 @@
 #include "DXUT.h"
 #include "DXUTcamera.h"
 #include "getdata/getdata.h"
+#include "utility/property.h"
 #include "utility/utility.h"
 #include <memory>               // for std::shared_ptr, for std::unique_ptr
 #include <vector>               // for std::vector
@@ -99,15 +100,33 @@ private:
     
     // #endregion メンバ関数
 
+    // #region プロパティ
+
+public:
+    //! A property.
+    /*!
+        元素名
+    */
+    utility::Property<std::shared_ptr<getdata::GetData>> Pgd;
+
+    // #endregion プロパティ
+
     // #region メンバ変数
 
-    // ! A private static member variable (constant).
+private:
+    //! A private static member variable (constant).
+    /*!
+        最大ループ回数
+    */
+    static auto const LOOPMAX = 1000;
+
+    //! A private static member variable (constant).
     /*!
         電子のサンプル点
     */
     static std::size_t const N = 80000;
     
-    // ! A private member variable.
+    //! A private member variable.
     /*!
         A model viewing camera
     */
@@ -115,7 +134,7 @@ private:
 
     ID3D10EffectShaderResourceVariable* diffuseVariable;
     
-    // ! A private member variable.
+    //! A private member variable.
     /*!
         エフェクト＝シェーダプログラムを読ませるところ
     */
@@ -125,7 +144,7 @@ private:
 
     ID3D10EffectVectorVariable*		    lightDirVariable;
     
-    // ! A private member variable.
+    //! A private member variable.
     /*!
         メッシュの色
     */
@@ -146,9 +165,8 @@ private:
     /*!
         rのメッシュとデータ
     */
-    std::shared_ptr<getdata::GetData> const pgd_;
-
-
+    std::shared_ptr<getdata::GetData> pgd_;
+    
     ID3D10EffectTechnique*              technique;
 
     std::unique_ptr<ID3D10ShaderResourceView, utility::Safe_Release<ID3D10ShaderResourceView>> textureRV;

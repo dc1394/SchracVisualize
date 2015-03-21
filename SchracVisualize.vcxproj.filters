@@ -112,9 +112,6 @@
     <ClInclude Include="getdata\getdata.h">
       <Filter>getdata</Filter>
     </ClInclude>
-    <ClInclude Include="getdata\property.h">
-      <Filter>getdata</Filter>
-    </ClInclude>
     <ClInclude Include="getdata\readdatafile.h">
       <Filter>getdata</Filter>
     </ClInclude>
@@ -122,6 +119,9 @@
       <Filter>utility</Filter>
     </ClInclude>
     <ClInclude Include="TDXScene.h" />
+    <ClInclude Include="utility\property.h">
+      <Filter>utility</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CLInclude Include="resource.h">
