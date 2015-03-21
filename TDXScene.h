@@ -2,6 +2,7 @@
     \brief TDXSceneクラスの宣言
 
     Copyright ©  2015 @dc1394 All Rights Reserved.
+    This software is released under the BSD-2 License.
 */
 
 #ifndef _TDXSCENE_H_
@@ -78,7 +79,7 @@ public:
                                     const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc, void* pUserContext );
     HRESULT MsgPrc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 
-    // ! A public member function.
+    //! A public member function.
     /*!
         再描画する
         \param m 磁気量子数
@@ -89,7 +90,7 @@ public:
     HRESULT Redraw(std::int32_t m, ID3D10Device * pd3dDevice, TDXScene::Re_Im_type reim);
 
 private:
-    // ! A private member function.
+    //! A private member function.
     /*!
         SimpleVertex2にデータを詰める
         \param m 磁気量子数
@@ -152,7 +153,7 @@ private:
 
     ID3D10EffectVectorVariable*         meshColorVariable;
     
-    // ! A private member variable.
+    //! A private member variable.
     /*!
         射影行列
     */
@@ -161,7 +162,7 @@ private:
 
     ID3D10EffectMatrixVariable*         projectionVariable;
 
-    // ! A private member variable (constant).
+    //! A private member variable (constant).
     /*!
         rのメッシュとデータ
     */
@@ -175,13 +176,13 @@ private:
 
     std::unique_ptr<ID3D10InputLayout, utility::Safe_Release<ID3D10InputLayout>> vertexLayout;
     
-    // ! A private member variable.
+    //! A private member variable.
     /*!
         vertex buffer
     */
     std::vector<SimpleVertex2> vertices;
     
-    // ! A private member variable.
+    //! A private member variable.
     /*!
         ビュー変換行列
     */
@@ -189,7 +190,7 @@ private:
 
     ID3D10EffectMatrixVariable*         viewVariable;
     
-    // ! A private member variable.
+    //! A private member variable.
     /*!
         ワールド変換行列
     */

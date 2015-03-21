@@ -1,3 +1,10 @@
+ï»¿/*! \file tdxscene.h
+    \brief TDXSceneã‚¯ãƒ©ã‚¹ã®å®Ÿè£…
+
+    Copyright Â©  2015 @dc1394 All Rights Reserved.
+    This software is released under the BSD-2 License.
+*/
+
 #include "DXUT.h"
 #include "DXUTmisc.h"
 #include "myrandom/myrand.h"
@@ -70,7 +77,7 @@ void TDXScene::FillSimpleVertex2(std::int32_t m, TDXScene::Re_Im_type reim, Simp
                 break;
 
             default:
-                BOOST_ASSERT(!"‰½‚©‚ª‚¨‚©‚µ‚¢!");
+                BOOST_ASSERT(!"ä½•ã‹ãŒãŠã‹ã—ã„!");
                 break;
             }
 
@@ -79,7 +86,7 @@ void TDXScene::FillSimpleVertex2(std::int32_t m, TDXScene::Re_Im_type reim, Simp
             break;
             
         default:
-            BOOST_ASSERT(!"‰½‚©‚ª‚¨‚©‚µ‚¢!");
+            BOOST_ASSERT(!"ä½•ã‹ãŒãŠã‹ã—ã„!");
             break;
         }
 

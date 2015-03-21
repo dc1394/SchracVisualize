@@ -2,6 +2,7 @@
     \brief ユーティリティ関数の宣言と実装
 
     Copyright ©  2015 @dc1394 All Rights Reserved.
+    This software is released under the BSD-2 License.
 */
 
 #ifndef _UTILITY_H_
@@ -19,7 +20,7 @@
 #include <boost/utility.hpp>    // for boost::checked_delete
 
 namespace utility {
-    // ! A function.
+    //! A function.
     /*!
         マルチバイト文字列をワイド文字列に変換する
         \param mbs マルチバイト文字列
@@ -28,14 +29,14 @@ namespace utility {
     */
     std::wstring my_mbstowcs(std::string const & mbs, std::int32_t codeMulti = 932);
 
-    // ! A function.
+    //! A function.
     /*!
         ファイルを開く
         \return ファイル名
     */
     std::string myOpenFile();
 
-    // ! A function.
+    //! A function.
     /*!
         ワイド文字列をマルチバイト文字列に変換する
         \param wcs ワイド文字列
@@ -44,7 +45,7 @@ namespace utility {
     */
     std::string my_wcstombs(std::array<wchar_t, MAX_PATH> const & wcs, std::int32_t codeMulti = 932);
 
-    // ! A function.
+    //! A function.
     /*!
         ファイル選択ダイアログを開く
         \param hWnd ウィンドウハンドル

@@ -80,14 +80,12 @@
     <ClCompile Include="DXUT\Optional\SDKmisc.cpp">
       <Filter>DXUT</Filter>
     </ClCompile>
-    <None Include="SchracVisualize.txt" />
     <None Include="DxClassTest.fx">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="EmptyProject9.cpp" />
-    <ClCompile Include="DxClassTest.cpp" />
     <ClCompile Include="myrandom\myrand.cpp">
       <Filter>myrandom</Filter>
     </ClCompile>
@@ -101,6 +99,7 @@
     <ClCompile Include="utility\utility.cpp">
       <Filter>utility</Filter>
     </ClCompile>
+    <ClCompile Include="DxClassMain.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="myrandom\myrand.h">

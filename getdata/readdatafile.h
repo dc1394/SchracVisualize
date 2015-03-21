@@ -2,6 +2,7 @@
     \brief 電子密度のデータファイルを読み込むクラスの宣言
 
     Copyright © 2015 @dc1394 All Rights Reserved.
+    This software is released under the BSD-2 License.
 */
 
 #ifndef _READDATAFILE_H_
@@ -36,7 +37,7 @@ namespace getdata {
 
         //! A destructor.
         /*!
-        デフォルトデストラクタ
+            デフォルトデストラクタ
         */
         ~ReadDataFile() = default;
 
@@ -56,7 +57,7 @@ namespace getdata {
         // #region メンバ変数
 
     private:
-        // !A private member variable(constant expression).
+        //!A private member variable(constant expression).
         /*!
             バッファサイズ
         */
@@ -69,15 +70,15 @@ namespace getdata {
     private:
         //! A private copy constructor (deleted).
         /*!
-        コピーコンストラクタ（禁止）
+            コピーコンストラクタ（禁止）
         */
         ReadDataFile(ReadDataFile const &) = delete;
 
         //! A private member function (deleted).
         /*!
-        operator=()の宣言（禁止）
-        \param コピー元のオブジェクト（未使用）
-        \return コピー元のオブジェクト
+            operator=()の宣言（禁止）
+            \param コピー元のオブジェクト（未使用）
+            \return コピー元のオブジェクト
         */
         ReadDataFile & operator=(ReadDataFile const &) = delete;
 

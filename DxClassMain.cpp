@@ -1,10 +1,11 @@
-//--------------------------------------------------------------------------------------
-// File: DxClassTest.cpp
-//
-// Basic introduction to DXUT
-//
-// Copyright (c) Microsoft Corporation. All rights reserved.
-//--------------------------------------------------------------------------------------
+ï»¿/*! \file DxClassMain.cpp
+    \brief ãƒ¡ã‚¤ãƒ³ãƒ•ã‚¡ã‚¤ãƒ«
+
+    Copyright Â©  2015 @dc1394 All Rights Reserved.
+    (but this is originally adapted by Microsoft Corporation for Basic introduction to DXUT)
+    This software is released under the BSD-2 License.
+*/
+
 #include "DXUT.h"
 #include "DXUTmisc.h"
 #include "DXUTgui.h"
@@ -19,8 +20,8 @@
 
 //! A global variable.
 /*!
-    _aligned_malloc‚ÅŠm•Û‚³‚ê‚½ƒƒ‚ƒŠ‚ğ‰ğ•ú‚·‚éƒ‰ƒ€ƒ_®
-    \param ptr _aligned_malloc _aligned_malloc‚ÅŠm•Û‚³‚ê‚½ƒƒ‚ƒŠ‚Ö‚Ìæ“ªƒ|ƒCƒ“ƒ^
+    _aligned_mallocã§ç¢ºä¿ã•ã‚ŒãŸãƒ¡ãƒ¢ãƒªã‚’è§£æ”¾ã™ã‚‹ãƒ©ãƒ ãƒ€å¼
+    \param ptr _aligned_malloc _aligned_mallocã§ç¢ºä¿ã•ã‚ŒãŸãƒ¡ãƒ¢ãƒªã¸ã®å…ˆé ­ãƒã‚¤ãƒ³ã‚¿
 */
 auto const aligned_deleter = [](TDXScene * ptr)
 {
@@ -35,13 +36,11 @@ CDXUTDialogResourceManager          g_DialogResourceManager;// manager for share
 CD3DSettingsDlg                     g_D3DSettingsDlg;       // Device settings dialog
 CDXUTDialog                         g_HUD;                  // manages the 3D UI
 
-//CDXUTTextHelper*                    g_pTxtHelper = NULL;
-
 bool	ROT_FLAG = true;
 
 //! A global variable.
 /*!
-    •`‰æ‚·‚é‹O“¹‚Ì¯•Ê”’l
+    æç”»ã™ã‚‹è»Œé“ã®è­˜åˆ¥æ•°å€¤
 */
 auto drawdata = 1U;
 
@@ -53,13 +52,13 @@ std::unique_ptr<ID3DX10Font, utility::Safe_Release<ID3DX10Font>> font;
 
 //! A global variable.
 /*!
-    ƒf[ƒ^ƒIƒuƒWƒFƒNƒg
+    ãƒ‡ãƒ¼ã‚¿ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ
 */
 std::shared_ptr<getdata::GetData> pgd;
 
 //! A global variable.
 /*!
-    •`‰æƒNƒ‰ƒX‚ÌƒIƒuƒWƒFƒNƒg‚Ö‚ÌƒXƒ}[ƒgƒ|ƒCƒ“ƒ^
+    æç”»ã‚¯ãƒ©ã‚¹ã®ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã¸ã®ã‚¹ãƒãƒ¼ãƒˆãƒã‚¤ãƒ³ã‚¿
 */
 std::unique_ptr<TDXScene, decltype(aligned_deleter)> scene;
 
@@ -71,13 +70,13 @@ std::unique_ptr<ID3DX10Sprite, utility::Safe_Release<ID3DX10Sprite>> sprite;
 
 //! A global variable.
 /*!
-    Ä•`‰æ‚·‚é‚©‚Ç‚¤‚©
+    å†æç”»ã™ã‚‹ã‹ã©ã†ã‹
 */
 auto redraw = false;
 
 //! A global variable.
 /*!
-    À•”‚Æ‹••”‚Ì‚Ç‚¿‚ç‚ğ•`‰æ‚·‚é‚©
+    å®Ÿéƒ¨ã¨è™šéƒ¨ã®ã©ã¡ã‚‰ã‚’æç”»ã™ã‚‹ã‹
 */
 auto reim = TDXScene::Re_Im_type::REAL;
 
@@ -115,20 +114,20 @@ void CALLBACK OnGUIEvent( UINT nEvent, int nControlID, CDXUTControl* pControl, v
 
 //! A function.
 /*!
-    ƒEƒBƒ“ƒhƒEƒ^ƒCƒgƒ‹‚ğ¶¬‚·‚é
-    \return ƒEƒBƒ“ƒhƒEƒ^ƒCƒgƒ‹
+    ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚¿ã‚¤ãƒˆãƒ«ã‚’ç”Ÿæˆã™ã‚‹
+    \return ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚¿ã‚¤ãƒˆãƒ«
 */
 std::wstring CreateWindowTitle();
 
 //! A function.
 /*!
-    ƒeƒLƒXƒgƒtƒ@ƒCƒ‹‚©‚çƒf[ƒ^‚ğ“Ç‚İ‚Ş
+    ãƒ†ã‚­ã‚¹ãƒˆãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰ãƒ‡ãƒ¼ã‚¿ã‚’èª­ã¿è¾¼ã‚€
 */
 void ReadData();
 
 //! A function.
 /*!
-    UI‚ğ”z’u‚·‚é
+    UIã‚’é…ç½®ã™ã‚‹
 */
 void SetUI();
 
@@ -298,7 +297,7 @@ void CALLBACK OnD3D10FrameRender( ID3D10Device* pd3dDevice, double fTime, float 
                     break;
 
                 default:
-                    BOOST_ASSERT(!"‰½‚©‚ª‚¨‚©‚µ‚¢I");
+                    BOOST_ASSERT(!"indexã®æŒ‡å®šãŒãŠã‹ã—ã„ï¼");
                     break;
                 }
             }
@@ -328,7 +327,7 @@ void CALLBACK OnD3D10FrameRender( ID3D10Device* pd3dDevice, double fTime, float 
                     break;
                     
                 default:
-                    BOOST_ASSERT(!"‰½‚©‚ª‚¨‚©‚µ‚¢I");
+                    BOOST_ASSERT(!"indexã®æŒ‡å®šãŒãŠã‹ã—ã„ï¼");
                     break;
                 }
             }
@@ -366,14 +365,14 @@ void CALLBACK OnD3D10FrameRender( ID3D10Device* pd3dDevice, double fTime, float 
                     break;
 
                 default:
-                    BOOST_ASSERT(!"‰½‚©‚ª‚¨‚©‚µ‚¢I");
+                    BOOST_ASSERT(!"indexã®æŒ‡å®šãŒãŠã‹ã—ã„ï¼");
                     break;
                 }
             }
             break;
 
             default:
-                BOOST_ASSERT(!"—Êq”‚Ìw’è‚ªˆÙí‚Å‚·I");
+                BOOST_ASSERT(!"é‡å­æ•°ã®æŒ‡å®šãŒç•°å¸¸ã§ã™ï¼");
                 break;
             }
             
@@ -554,7 +553,7 @@ void ReadData()
             pgd = std::make_shared<getdata::GetData>(utility::myOpenFile());
         }
         catch (std::runtime_error const & e) {
-            ::MessageBox(nullptr, utility::my_mbstowcs(e.what()).c_str(), L"ƒGƒ‰[", MB_OK | MB_ICONWARNING);
+            ::MessageBox(nullptr, utility::my_mbstowcs(e.what()).c_str(), L"ã‚¨ãƒ©ãƒ¼", MB_OK | MB_ICONWARNING);
             continue;
         }
         break;
@@ -572,7 +571,7 @@ void SetUI()
     g_HUD.AddButton(IDC_CHANGEDEVICE, L"Change device (F2)", 35, iY += 24, 125, 22, VK_F2);
     g_HUD.AddButton(IDC_TOGGLEROTATION, L"Toggle Rotaion Animation", 35, iY += 24, 125, 22);
 
-    g_HUD.AddButton(IDC_READDATA, L"V‹Kƒtƒ@ƒCƒ‹“Ç‚İ‚İ", 35, iY += 34, 125, 22);
+    g_HUD.AddButton(IDC_READDATA, L"æ–°è¦ãƒ•ã‚¡ã‚¤ãƒ«èª­ã¿è¾¼ã¿", 35, iY += 34, 125, 22);
 
     // Combobox
     CDXUTComboBox* pCombo;
@@ -622,14 +621,14 @@ void SetUI()
         break;
 
         default:
-            throw std::runtime_error("gˆÈã‚Ì‹O“¹‚É‚Í‘Î‰‚µ‚Ä‚¢‚Ü‚¹‚ñ");
+            throw std::runtime_error("gä»¥ä¸Šã®è»Œé“ã«ã¯å¯¾å¿œã—ã¦ã„ã¾ã›ã‚“");
             break;
         }
 
         if (pgd->Rho_wf_type_ == getdata::GetData::Rho_Wf_type::WF) {
             // Radio buttons
-            g_HUD.AddRadioButton(IDC_RADIOA, 1, L"À•”", 35, iY += 34, 125, 22, true, L'1');
-            g_HUD.AddRadioButton(IDC_RADIOB, 1, L"‹••”", 35, iY += 28, 125, 22, false, L'2');
+            g_HUD.AddRadioButton(IDC_RADIOA, 1, L"å®Ÿéƒ¨", 35, iY += 34, 125, 22, true, L'1');
+            g_HUD.AddRadioButton(IDC_RADIOB, 1, L"è™šéƒ¨", 35, iY += 28, 125, 22, false, L'2');
         }
     }
 }
