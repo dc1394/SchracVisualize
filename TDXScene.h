@@ -117,7 +117,7 @@ public:
 private:
     //! A private static member variable (constant).
     /*!
-        最大ループ回数
+        波動関数描画の最大ループ回数
     */
     static auto const LOOPMAX = 1000;
 
@@ -125,7 +125,7 @@ private:
     /*!
         電子のサンプル点
     */
-    static std::size_t const N = 80000;
+    static std::size_t const N = 50000;
     
     //! A private member variable.
     /*!

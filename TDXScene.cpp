@@ -44,7 +44,7 @@ void TDXScene::FillSimpleVertex2(std::int32_t m, TDXScene::Re_Im_type reim, Simp
     MyRand mr(-rmax, rmax);
     MyRand mr2(pgd_->Funcmin, pgd_->Funcmax);
 
-    for (auto i = 0; i < LOOPMAX; i++) {
+    for (auto i = 1; ; i++) {
         x = mr.myrand();
         y = mr.myrand();
         z = mr.myrand();
@@ -92,7 +92,7 @@ void TDXScene::FillSimpleVertex2(std::int32_t m, TDXScene::Re_Im_type reim, Simp
 
         sign = (pp > 0.0) - (pp < 0.0);
 
-        if (std::fabs(pp) >= std::fabs(p)) {
+        if ((std::fabs(pp) >= std::fabs(p)) || (i == LOOPMAX && pgd_->Rho_wf_type_ == getdata::GetData::Rho_Wf_type::WF)) {
             break;
         }
     }
