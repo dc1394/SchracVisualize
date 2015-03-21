@@ -119,7 +119,7 @@ private:
     /*!
         波動関数描画の最大ループ回数
     */
-    static auto const LOOPMAX = 1000;
+    static auto const LOOPMAX = 5000;
 
     //! A private static member variable (constant).
     /*!

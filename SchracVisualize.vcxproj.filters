@@ -21,6 +21,9 @@
     <Filter Include="utility">
       <UniqueIdentifier>{4cc49439-562a-4ce4-bb3b-01053a4f5851}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Document">
+      <UniqueIdentifier>{73ddb452-c2a7-4e7a-a036-855a5543fafd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="DXUT\Optional\directx.ico">
@@ -130,5 +133,8 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
+    <Text Include="document\readme.txt">
+      <Filter>Document</Filter>
+    </Text>
   </ItemGroup>
 </Project>
