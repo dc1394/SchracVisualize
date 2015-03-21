@@ -66,7 +66,7 @@
   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 --------------------------------------------------------------------------------
 
-  SchracにはBoostコミュニティによるBoost C++ Librariesを使用しています。
+  SchracVisualizeにはBoostコミュニティによるBoost C++ Librariesを使用しています。
   こちらのライセンスは Boostライセンス になります。
 
 /* Boost Software License - Version 1.0 - August 17th, 2003
@@ -94,9 +94,9 @@
 * DEALINGS IN THE SOFTWARE.
 */
 
-  SchracにはGNU ProjectによるGNU Scientific Libraryを使用しています。こちらのラ
-  イセンスは GNU General Public License になります。
+  SchracVisualizeにはGNU ProjectによるGNU Scientific Libraryを使用しています。こ
+　ちらのライセンスは GNU General Public License になります。
 
-  Schracには®Intel CorpolationによるIntel® Threading Building Blocks (Intel® 
-  TBB)を使用しています。
+  SchracVisualizeには®Intel CorpolationによるIntel® Threading Building Blocks
+　(Intel® TBB)を使用しています。
   こちらのライセンスは GNU General Public License, version 2 になります。
