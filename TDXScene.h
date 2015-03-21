@@ -106,7 +106,7 @@ private:
 public:
     //! A property.
     /*!
-        元素名
+        データオブジェクトのスマートポインタのプロパティ
     */
     utility::Property<std::shared_ptr<getdata::GetData>> Pgd;
 
