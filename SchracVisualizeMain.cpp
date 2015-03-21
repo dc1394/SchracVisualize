@@ -404,6 +404,8 @@ void CALLBACK OnD3D10DestroyDevice( void* pUserContext )
     g_D3DSettingsDlg.OnD3D10DestroyDevice();
     DXUTGetGlobalResourceCache().OnDestroyDevice();
 
+    font.reset();
+    sprite.reset();
     scene.reset();
 }
 
