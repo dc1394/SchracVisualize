@@ -31,10 +31,10 @@ struct SimpleVertex2
 #define SIMPLEVER2
 #endif
 
-
-
-#define DEG2RAD( a ) ( a * D3DX_PI / 180.f )
-
+//! A class.
+/*!
+    画面描画クラス
+*/
 class TDXScene final {
     // #region 列挙型
 
@@ -70,8 +70,6 @@ public:
 
     // #region メンバ関数
 	
-    static void operator delete(void* p, void* buf){}
-
     HRESULT Init(ID3D10Device* pd3dDevice);
     HRESULT OnFrameMove( double fTime, float fElapsedTime, void* pUserContext );
     HRESULT OnRender( ID3D10Device* pd3dDevice, double fTime, float fElapsedTime, void* pUserContext );
