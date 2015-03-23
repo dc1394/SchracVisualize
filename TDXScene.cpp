@@ -25,6 +25,7 @@ TDXScene::TDXScene(std::shared_ptr<getdata::GetData> const & pgd) :
     projectionVariable(nullptr),
     pgd_(pgd),
     technique(nullptr),
+    textureRV(nullptr),
     vertices(N),
     viewVariable(nullptr),
     worldVariable(nullptr)
@@ -44,7 +45,7 @@ void TDXScene::FillSimpleVertex2(std::int32_t m, TDXScene::Re_Im_type reim, Simp
     MyRand mr(-rmax, rmax);
     MyRand mr2(pgd_->Funcmin, pgd_->Funcmax);
 
-    for (auto i = 1; ; i++) {
+    for (auto i = 0; i < LOOPMAX; i++) {
         x = mr.myrand();
         y = mr.myrand();
         z = mr.myrand();
@@ -59,7 +60,7 @@ void TDXScene::FillSimpleVertex2(std::int32_t m, TDXScene::Re_Im_type reim, Simp
 
         switch (pgd_->Rho_wf_type_) {
         case getdata::GetData::Rho_Wf_type::RHO:
-            pp = (*pgd_)(r) * gsl_sf_legendre_sphPlm(pgd_->L, m, z / r);
+            pp = (*pgd_)(r) * gsl_sf_legendre_sphPlm(pgd_->L, std::abs(m), z / r);
             pp *= pp;
             break;
 
@@ -81,7 +82,7 @@ void TDXScene::FillSimpleVertex2(std::int32_t m, TDXScene::Re_Im_type reim, Simp
                 break;
             }
 
-            pp = (*pgd_)(r)* ylm;
+            pp = (*pgd_)(r) * ylm;
         }
             break;
             
@@ -92,7 +93,8 @@ void TDXScene::FillSimpleVertex2(std::int32_t m, TDXScene::Re_Im_type reim, Simp
 
         sign = (pp > 0.0) - (pp < 0.0);
 
-        if ((std::fabs(pp) >= std::fabs(p)) || (i == LOOPMAX && pgd_->Rho_wf_type_ == getdata::GetData::Rho_Wf_type::WF)) {
+        if ((std::fabs(pp) >= std::fabs(p)) ||
+            (!m && pgd_->Rho_wf_type_ == getdata::GetData::Rho_Wf_type::WF && reim == TDXScene::Re_Im_type::IMAGINARY)) {
             break;
         }
     }
@@ -189,10 +191,8 @@ HRESULT TDXScene::Init(ID3D10Device* pd3dDevice)
     // Set primitive topology
     pd3dDevice->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_POINTLIST);
 
-    ID3D10ShaderResourceView * textureRVtmp;
     // Load the Texture
-    hr = D3DX10CreateShaderResourceViewFromFile(pd3dDevice, L"seafloor.dds", nullptr, nullptr, &textureRVtmp, nullptr);
-    textureRV.reset(textureRVtmp);
+    hr = D3DX10CreateShaderResourceViewFromFile(pd3dDevice, L"seafloor.dds", nullptr, nullptr, &textureRV, nullptr);
 
     // Initialize the world matrices
     D3DXMatrixIdentity( &world );
@@ -225,7 +225,6 @@ HRESULT TDXScene::OnRender( ID3D10Device* pd3dDevice, double fTime, float fElaps
     //
     // Clear the back buffer
     //
-//    float ClearColor[4] = { 0.0f, 0.0625f, 0.15f, 1.0f }; // red, green, blue, alpha
     auto const ClearColor = { 0.0f, 0.0f, 0.0f, 1.0f }; // red, green, blue, alpha
     auto pRTV = DXUTGetD3D10RenderTargetView();
     pd3dDevice->ClearRenderTargetView( pRTV, ClearColor.begin() );

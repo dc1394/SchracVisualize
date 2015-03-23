@@ -168,7 +168,7 @@ private:
     
     ID3D10EffectTechnique*              technique;
 
-    std::unique_ptr<ID3D10ShaderResourceView, utility::Safe_Release<ID3D10ShaderResourceView>> textureRV;
+    ID3D10ShaderResourceView * textureRV;
     
     std::unique_ptr<ID3D10Buffer, utility::Safe_Release<ID3D10Buffer>> vertexBuffer;
 
