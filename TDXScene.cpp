@@ -60,8 +60,11 @@ void TDXScene::FillSimpleVertex2(std::int32_t m, TDXScene::Re_Im_type reim, Simp
 
         switch (pgd_->Rho_wf_type_) {
         case getdata::GetData::Rho_Wf_type::RHO:
-            pp = (*pgd_)(r) * gsl_sf_legendre_sphPlm(pgd_->L, std::abs(m), z / r);
+        {
+            auto const phi = std::acos(x / std::sqrt(x * x + y * y));
+            pp = std::abs((*pgd_)(r) * boost::math::spherical_harmonic(pgd_->L, m, std::acos(z / r), phi));
             pp *= pp;
+        }
             break;
 
         case getdata::GetData::Rho_Wf_type::WF:
@@ -185,8 +188,6 @@ HRESULT TDXScene::Init(ID3D10Device* pd3dDevice)
 
     // Set the input layout
     pd3dDevice->IASetInputLayout( vertexLayout.get() );
-
-    Redraw(0, pd3dDevice, TDXScene::Re_Im_type::REAL);
 
     // Set primitive topology
     pd3dDevice->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_POINTLIST);

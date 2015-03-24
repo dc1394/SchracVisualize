@@ -72,7 +72,7 @@ std::unique_ptr<ID3DX10Sprite, utility::Safe_Release<ID3DX10Sprite>> sprite;
 /*!
     再描画するかどうか
 */
-auto redraw = false;
+auto redraw = true;
 
 //! A global variable.
 /*!
