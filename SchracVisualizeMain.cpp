@@ -13,10 +13,8 @@
 #include "SDKmisc.h"
 #include "TDXScene.h"
 #include "resource.h"
-#include <malloc.h>     // for _aligned_malloc, _aligned_free 
 #include <string>       // for std::wstring, std::to_string
-
-#define DEG2RAD( a ) ( a * D3DX_PI / 180.f )
+#include <malloc.h>     // for _aligned_malloc, _aligned_free 
 
 //! A global variable.
 /*!
@@ -274,7 +272,7 @@ void CALLBACK OnD3D10FrameRender( ID3D10Device* pd3dDevice, double fTime, float 
     }
 	else
 	{
-        if (redraw) {
+        //if (redraw) {
             auto const index = drawdata & 0x0F;
             switch (pgd->L) {
             case 0:
@@ -376,8 +374,12 @@ void CALLBACK OnD3D10FrameRender( ID3D10Device* pd3dDevice, double fTime, float 
                 break;
             }
             
-            redraw = false;
-        }
+            if (scene->thread_end) {
+                scene->th.join();
+            }
+
+            //redraw = false;
+        //}
 
         scene->OnRender( pd3dDevice, fTime, fElapsedTime, pUserContext );
 	    g_HUD.OnRender( fElapsedTime );

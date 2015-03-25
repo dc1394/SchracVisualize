@@ -16,8 +16,10 @@
 #include "utility/property.h"
 #include "utility/utility.h"
 #include <memory>               // for std::shared_ptr, for std::unique_ptr
+#include <thread>               // for std::thread
 #include <vector>               // for std::vector
 #include <d3dx9math.h>
+#include <boost/multi_index/detail/scope_guard.hpp>
 
 //--------------------------------------------------------------------------------------
 // Structures
@@ -69,13 +71,13 @@ public:
     // #endregion コンストラクタ・デストラクタ
 
     // #region メンバ関数
-	
+
     HRESULT Init(ID3D10Device* pd3dDevice);
+    HRESULT MsgPrc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     HRESULT OnFrameMove( double fTime, float fElapsedTime, void* pUserContext );
     HRESULT OnRender( ID3D10Device* pd3dDevice, double fTime, float fElapsedTime, void* pUserContext );
     HRESULT OnResize( ID3D10Device* pd3dDevice, IDXGISwapChain* pSwapChain,
                                     const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc, void* pUserContext );
-    HRESULT MsgPrc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 
     //! A public member function.
     /*!
@@ -88,6 +90,16 @@ public:
     HRESULT Redraw(std::int32_t m, ID3D10Device * pd3dDevice, TDXScene::Re_Im_type reim);
 
 private:
+
+    //! A private member function.
+    /*!
+        SimpleVertex2のデータをクリアし、新しいデータを詰める
+        \param m 磁気量子数
+        \param reim 実部を描画するか、虚部を描画するか
+        \param ver 対象のSimpleVertex2
+    */
+    void ClearFillSimpleVertex2(std::int32_t m, TDXScene::Re_Im_type reim);
+
     //! A private member function.
     /*!
         SimpleVertex2にデータを詰める
@@ -96,7 +108,8 @@ private:
         \param ver 対象のSimpleVertex2
     */
     void FillSimpleVertex2(std::int32_t m, TDXScene::Re_Im_type reim, SimpleVertex2 & ver);
-    
+       
+
     // #endregion メンバ関数
 
     // #region プロパティ
@@ -123,7 +136,7 @@ private:
     /*!
         電子のサンプル点
     */
-    static std::size_t const N = 50000;
+    static std::size_t const N = 100;
     
     //! A private member variable.
     /*!
@@ -133,6 +146,8 @@ private:
 
     ID3D10EffectShaderResourceVariable* diffuseVariable;
     
+    bool first = true;
+
     //! A private member variable.
     /*!
         エフェクト＝シェーダプログラムを読ませるところ
@@ -167,6 +182,11 @@ private:
     std::shared_ptr<getdata::GetData> pgd_;
     
     ID3D10EffectTechnique*              technique;
+
+public:
+    std::thread th;
+
+    bool thread_end;
 
     ID3D10ShaderResourceView * textureRV;
     

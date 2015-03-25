@@ -67,16 +67,16 @@ namespace utility {
         OPENFILENAME ofn = { 0 };
 
         // 構造体に情報をセット
-        ofn.lStructSize = sizeof(ofn);			                                    // 構造体のサイズ
-        ofn.hwndOwner = hWnd;					                                    // コモンダイアログの親ウィンドウハンドル
-        ofn.lpstrFilter = L"csv files(*.csv)\0*.csv\0All files(*.*)\0*.*\0\0";      // ファイルの種類
-        ofn.lpstrFile = filepath;				                                    // 選択されたファイル名(フルパス)を受け取る変数のアドレス
-        ofn.lpstrFileTitle = filename;			                                    // 選択されたファイル名を受け取る変数のアドレス
-        ofn.nMaxFile = MAX_PATH;				                                    // lpstrFileに指定した変数のサイズ
-        ofn.nMaxFileTitle = MAX_PATH;			                                    // lpstrFileTitleに指定した変数のサイズ
-        ofn.Flags = OFN_FILEMUSTEXIST;			                                    // フラグ指定
-        ofn.lpstrTitle = title;					                                    // コモンダイアログのキャプション
-        ofn.lpstrDefExt = defextension; 		                                    // デフォルトのファイルの種類
+        ofn.lStructSize = sizeof(ofn);			                                // 構造体のサイズ
+        ofn.hwndOwner = hWnd;					                                // コモンダイアログの親ウィンドウハンドル
+        ofn.lpstrFilter = L"csv files(*.csv)\0*.csv\0All files(*.*)\0*.*\0\0";  // ファイルの種類
+        ofn.lpstrFile = filepath;				                                // 選択されたファイル名(フルパス)を受け取る変数のアドレス
+        ofn.lpstrFileTitle = filename;			                                // 選択されたファイル名を受け取る変数のアドレス
+        ofn.nMaxFile = MAX_PATH;				                                // lpstrFileに指定した変数のサイズ
+        ofn.nMaxFileTitle = MAX_PATH;			                                // lpstrFileTitleに指定した変数のサイズ
+        ofn.Flags = OFN_FILEMUSTEXIST;			                                // フラグ指定
+        ofn.lpstrTitle = title;					                                // コモンダイアログのキャプション
+        ofn.lpstrDefExt = defextension; 		                                // デフォルトのファイルの種類
 
         // ファイルを開くコモンダイアログを作成
         return ::GetOpenFileName(&ofn);

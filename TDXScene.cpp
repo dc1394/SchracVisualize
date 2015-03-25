@@ -12,6 +12,7 @@
 #include "TDXScene.h"
 #include <boost/assert.hpp>                                     // for BOOST_ASSERT
 #include <boost/math/special_functions/spherical_harmonic.hpp>  // for boost::math::spherical_harmonic
+#include <boost/range/algorithm.hpp>                            // for boost::fill
 #include <gsl/gsl_sf_legendre.h>                                // for gsl_sf_legendre_sphPlm
 #include <tbb/parallel_for.h>                                   // for tbb::parallel_for
 #include <tbb/partitioner.h>                                    // for tbb::auto_partitioner
@@ -32,85 +33,6 @@ TDXScene::TDXScene(std::shared_ptr<getdata::GetData> const & pgd) :
 {
 }
 
-void TDXScene::FillSimpleVertex2(std::int32_t m, TDXScene::Re_Im_type reim, SimpleVertex2 & ver)
-{
-    auto sign = 0;
-    auto p = 0.0, pp = 0.0;
-    double x, y, z;
-
-    using namespace myrandom;
-
-    auto const n = static_cast<double>(pgd_->N);
-    auto const rmax = (2.3622 * n + 3.3340) * n + 1.3228;
-    MyRand mr(-rmax, rmax);
-    MyRand mr2(pgd_->Funcmin, pgd_->Funcmax);
-
-    for (auto i = 0; i < LOOPMAX; i++) {
-        x = mr.myrand();
-        y = mr.myrand();
-        z = mr.myrand();
-
-        auto const rmin = pgd_->R_meshmin();
-        if (std::fabs(x) < rmin || std::fabs(y) < rmin || std::fabs(z) < rmin) {
-            continue;
-        }
-
-        p = mr2.myrand();
-        auto const r = std::sqrt(x * x + y * y + z * z);
-
-        switch (pgd_->Rho_wf_type_) {
-        case getdata::GetData::Rho_Wf_type::RHO:
-        {
-            auto const phi = std::acos(x / std::sqrt(x * x + y * y));
-            pp = std::abs((*pgd_)(r) * boost::math::spherical_harmonic(pgd_->L, m, std::acos(z / r), phi));
-            pp *= pp;
-        }
-            break;
-
-        case getdata::GetData::Rho_Wf_type::WF:
-        {
-            auto const phi = std::acos(x / std::sqrt(x * x + y * y));
-            double ylm = 0.0;
-            switch (reim) {
-            case TDXScene::Re_Im_type::REAL:
-                ylm = boost::math::spherical_harmonic_r(pgd_->L, m, std::acos(z / r), phi);
-                break;
-
-            case TDXScene::Re_Im_type::IMAGINARY:
-                ylm = boost::math::spherical_harmonic_i(pgd_->L, m, std::acos(z / r), phi);
-                break;
-
-            default:
-                BOOST_ASSERT(!"何かがおかしい!");
-                break;
-            }
-
-            pp = (*pgd_)(r) * ylm;
-        }
-            break;
-            
-        default:
-            BOOST_ASSERT(!"何かがおかしい!");
-            break;
-        }
-
-        sign = (pp > 0.0) - (pp < 0.0);
-
-        if ((std::fabs(pp) >= std::fabs(p)) ||
-            (!m && pgd_->Rho_wf_type_ == getdata::GetData::Rho_Wf_type::WF && reim == TDXScene::Re_Im_type::IMAGINARY)) {
-            break;
-        }
-    }
-
-    ver.Pos.x = static_cast<float>(x);
-    ver.Pos.y = static_cast<float>(y);
-    ver.Pos.z = static_cast<float>(z);
-
-    ver.Col.r = sign > 0 ? 0.8f : 0.0f;
-    ver.Col.b = 0.8f;
-    ver.Col.g = sign < 0 ? 0.8f : 0.0f;
-    ver.Col.a = 1.0f;
-}
 
 HRESULT TDXScene::Init(ID3D10Device* pd3dDevice)
 {
@@ -207,6 +129,12 @@ HRESULT TDXScene::Init(ID3D10Device* pd3dDevice)
 }
 
 
+HRESULT TDXScene::MsgPrc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    return camera.HandleMessages(hWnd, uMsg, wParam, lParam);
+}
+
+
 HRESULT TDXScene::OnFrameMove( double fTime, float fElapsedTime, void* pUserContext )
 {
     // Update the camera's position based on user input 
@@ -276,21 +204,13 @@ HRESULT TDXScene::OnResize( ID3D10Device* pd3dDevice, IDXGISwapChain* pSwapChain
     return S_OK;
 }
 
-HRESULT TDXScene::MsgPrc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
-{
-    return camera.HandleMessages( hWnd, uMsg, wParam, lParam );
-}
 
 HRESULT TDXScene::Redraw(std::int32_t m, ID3D10Device * pd3dDevice, TDXScene::Re_Im_type reim)
 {
-    tbb::task_scheduler_init init;
-
-    tbb::parallel_for(
-        std::uint32_t(0),
-        N,
-        std::uint32_t(1),
-        [this, m, reim](std::uint32_t i) { FillSimpleVertex2(m, reim, vertices[i]); },
-        tbb::auto_partitioner());
+    if (first) {
+        th = std::thread([this, m, reim]{ ClearFillSimpleVertex2(m, reim); });
+        first = false;
+    }
 
     D3D10_BUFFER_DESC bd;
     bd.Usage = D3D10_USAGE_DEFAULT;
@@ -311,6 +231,111 @@ HRESULT TDXScene::Redraw(std::int32_t m, ID3D10Device * pd3dDevice, TDXScene::Re
     UINT offset = 0;
     pd3dDevice->IASetVertexBuffers(0, 1, &vertexBuffertmp, &stride, &offset);
     vertexBuffer.reset(vertexBuffertmp);
-
+    
+    //th.join();
+    
     return S_OK;
+}
+
+
+void TDXScene::ClearFillSimpleVertex2(std::int32_t m, TDXScene::Re_Im_type reim)
+{
+    thread_end = false;
+
+    SimpleVertex2 sv2;
+    sv2.Col = { 0.0f, 0.0f, 0.0f, 0.0f };
+    sv2.Pos = { 0.0f, 0.0f, 0.0f };
+    boost::fill(vertices, sv2);
+
+    tbb::task_scheduler_init init;
+
+    tbb::parallel_for(
+        std::uint32_t(0),
+        N,
+        std::uint32_t(1),
+        [this, m, reim](std::uint32_t i) { FillSimpleVertex2(m, reim, vertices[i]); },
+        tbb::auto_partitioner());
+
+    thread_end = true;
+}
+
+
+void TDXScene::FillSimpleVertex2(std::int32_t m, TDXScene::Re_Im_type reim, SimpleVertex2 & ver)
+{
+    auto sign = 0;
+    auto p = 0.0, pp = 0.0;
+    double x, y, z;
+
+    using namespace myrandom;
+
+    auto const n = static_cast<double>(pgd_->N);
+    auto const rmax = (2.3622 * n + 3.3340) * n + 1.3228;
+    MyRand mr(-rmax, rmax);
+    MyRand mr2(pgd_->Funcmin, pgd_->Funcmax);
+
+    for (auto i = 0; i < LOOPMAX; i++) {
+        x = mr.myrand();
+        y = mr.myrand();
+        z = mr.myrand();
+
+        auto const rmin = pgd_->R_meshmin();
+        if (std::fabs(x) < rmin || std::fabs(y) < rmin || std::fabs(z) < rmin) {
+            continue;
+        }
+
+        p = mr2.myrand();
+        auto const r = std::sqrt(x * x + y * y + z * z);
+
+        switch (pgd_->Rho_wf_type_) {
+        case getdata::GetData::Rho_Wf_type::RHO:
+        {
+            auto const phi = std::acos(x / std::sqrt(x * x + y * y));
+            pp = std::abs((*pgd_)(r)* boost::math::spherical_harmonic(pgd_->L, m, std::acos(z / r), phi));
+            pp *= pp;
+        }
+        break;
+
+        case getdata::GetData::Rho_Wf_type::WF:
+        {
+            auto const phi = std::acos(x / std::sqrt(x * x + y * y));
+            double ylm = 0.0;
+            switch (reim) {
+            case TDXScene::Re_Im_type::REAL:
+                ylm = boost::math::spherical_harmonic_r(pgd_->L, m, std::acos(z / r), phi);
+                break;
+
+            case TDXScene::Re_Im_type::IMAGINARY:
+                ylm = boost::math::spherical_harmonic_i(pgd_->L, m, std::acos(z / r), phi);
+                break;
+
+            default:
+                BOOST_ASSERT(!"何かがおかしい!");
+                break;
+            }
+
+            pp = (*pgd_)(r)* ylm;
+        }
+        break;
+
+        default:
+            BOOST_ASSERT(!"何かがおかしい!");
+            break;
+        }
+
+        sign = (pp > 0.0) - (pp < 0.0);
+
+        if ((std::fabs(pp) >= std::fabs(p)) ||
+            (!m && pgd_->Rho_wf_type_ == getdata::GetData::Rho_Wf_type::WF && reim == TDXScene::Re_Im_type::IMAGINARY)) {
+            break;
+        }
+    }
+
+    ver.Pos.x = static_cast<float>(x);
+    ver.Pos.y = static_cast<float>(y);
+    ver.Pos.z = static_cast<float>(z);
+
+    ver.Col.r = sign > 0 ? 0.8f : 0.0f;
+    ver.Col.b = 0.8f;
+    ver.Col.g = sign < 0 ? 0.8f : 0.0f;
+    ver.Col.a = 1.0f;
 }
