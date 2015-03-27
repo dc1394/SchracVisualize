@@ -272,116 +272,107 @@ void CALLBACK OnD3D10FrameRender( ID3D10Device* pd3dDevice, double fTime, float 
     }
 	else
 	{
-        //if (redraw) {
-            auto const index = drawdata & 0x0F;
-            switch (pgd->L) {
-            case 0:
+        auto const index = drawdata & 0x0F;
+        switch (pgd->L) {
+        case 0:
+            scene->Redraw(0, pd3dDevice, reim);
+            break;
+
+        case 1:
+        {
+            switch (index) {
+            case 1:
+                scene->Redraw(1, pd3dDevice, reim);
+                break;
+
+            case 2:
+                scene->Redraw(-1, pd3dDevice, reim);
+                break;
+
+            case 3:
                 scene->Redraw(0, pd3dDevice, reim);
                 break;
 
-            case 1:
-            {
-                switch (index) {
-                case 1:
-                    scene->Redraw(1, pd3dDevice, reim);
-                    break;
-
-                case 2:
-                    scene->Redraw(-1, pd3dDevice, reim);
-                    break;
-
-                case 3:
-                    scene->Redraw(0, pd3dDevice, reim);
-                    break;
-
-                default:
-                    BOOST_ASSERT(!"indexの指定がおかしい！");
-                    break;
-                }
-            }
-            break;
-
-            case 2:
-            {
-                switch (index) {
-                case 1:
-                    scene->Redraw(-2, pd3dDevice, reim);
-                    break;
-
-                case 2:
-                    scene->Redraw(-1, pd3dDevice, reim);
-                    break;
-
-                case 3:
-                    scene->Redraw(1, pd3dDevice, reim);
-                    break;
-
-                case 4:
-                    scene->Redraw(2, pd3dDevice, reim);
-                    break;
-
-                case 5:
-                    scene->Redraw(0, pd3dDevice, reim);
-                    break;
-                    
-                default:
-                    BOOST_ASSERT(!"indexの指定がおかしい！");
-                    break;
-                }
-            }
-            break;
-
-            case 3:
-            {
-                switch (index) {
-                case 1:
-                    scene->Redraw(1, pd3dDevice, reim);
-                    break;
-
-                case 2:
-                    scene->Redraw(-1, pd3dDevice, reim);
-                    break;
-
-                case 3:
-                    scene->Redraw(2, pd3dDevice, reim);
-                    break;
-
-                case 4:
-                    scene->Redraw(-2, pd3dDevice, reim);
-                    break;
-
-                case 5:
-                    scene->Redraw(3, pd3dDevice, reim);
-                    break;
-
-                case 6:
-                    scene->Redraw(-3, pd3dDevice, reim);
-                    break;
-
-                case 7:
-                    scene->Redraw(0, pd3dDevice, reim);
-                    break;
-
-                default:
-                    BOOST_ASSERT(!"indexの指定がおかしい！");
-                    break;
-                }
-            }
-            break;
-
             default:
-                BOOST_ASSERT(!"量子数の指定が異常です！");
+                BOOST_ASSERT(!"indexの指定がおかしい！");
                 break;
             }
-            
-            if (scene->thread_end) {
-                scene->th.join();
-                scene->thread_end = false;
+        }
+        break;
+
+        case 2:
+        {
+            switch (index) {
+            case 1:
+                scene->Redraw(-2, pd3dDevice, reim);
+                break;
+
+            case 2:
+                scene->Redraw(-1, pd3dDevice, reim);
+                break;
+
+            case 3:
+                scene->Redraw(1, pd3dDevice, reim);
+                break;
+
+            case 4:
+                scene->Redraw(2, pd3dDevice, reim);
+                break;
+
+            case 5:
+                scene->Redraw(0, pd3dDevice, reim);
+                break;
+                
+            default:
+                BOOST_ASSERT(!"indexの指定がおかしい！");
+                break;
             }
+        }
+        break;
 
-            //redraw = false;
-        //}
+        case 3:
+        {
+            switch (index) {
+            case 1:
+                scene->Redraw(1, pd3dDevice, reim);
+                break;
 
+            case 2:
+                scene->Redraw(-1, pd3dDevice, reim);
+                break;
+
+            case 3:
+                scene->Redraw(2, pd3dDevice, reim);
+                break;
+
+            case 4:
+                scene->Redraw(-2, pd3dDevice, reim);
+                break;
+
+            case 5:
+                scene->Redraw(3, pd3dDevice, reim);
+                break;
+
+            case 6:
+                scene->Redraw(-3, pd3dDevice, reim);
+                break;
+
+            case 7:
+                scene->Redraw(0, pd3dDevice, reim);
+                break;
+
+            default:
+                BOOST_ASSERT(!"indexの指定がおかしい！");
+                break;
+            }
+        }
+        break;
+
+        default:
+            BOOST_ASSERT(!"量子数の指定が異常です！");
+            break;
+        }
+        
         scene->OnRender( pd3dDevice, fTime, fElapsedTime, pUserContext );
 	    g_HUD.OnRender( fElapsedTime );
 	}

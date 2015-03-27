@@ -19,227 +19,255 @@
 #include <thread>               // for std::thread
 #include <vector>               // for std::vector
 #include <d3dx9math.h>
-#include <boost/multi_index/detail/scope_guard.hpp>
 
-//--------------------------------------------------------------------------------------
-// Structures
-//--------------------------------------------------------------------------------------
+namespace tdxscene {
+    //! A class.
+    /*!
+        画面描画クラス
+*/
+    class TDXScene final {
 #ifndef	SIMPLEVER2
-struct SimpleVertex2
-{
-    D3DXVECTOR3 Pos;
-    D3DXCOLOR	Col;
-};
+        // #region 構造体
+
+        struct SimpleVertex2
+        {
+            D3DXVECTOR3 Pos;
+            D3DXCOLOR	Col;
+        };
 #define SIMPLEVER2
 #endif
 
-//! A class.
-/*!
-    画面描画クラス
-*/
-class TDXScene final {
-    // #region 列挙型
+        // #endregion 構造体
 
-public:
-    //! A enumerated type
-    /*!
-        実部か虚部かを表す列挙型
-    */
-    enum class Re_Im_type {
-        // 実部
-        REAL,
-        // 虚部
-        IMAGINARY
+    public:
+        //! A enumerated type
+        /*!
+            実部か虚部かを表す列挙型
+        */
+        enum class Re_Im_type {
+            // 実部
+            REAL,
+            // 虚部
+            IMAGINARY
+        };
+
+        // #endregion 列挙型
+
+        // #region コンストラクタ・デストラクタ
+
+        //! A constructor.
+        /*!
+            唯一のコンストラクタ
+        */
+        TDXScene(std::shared_ptr<getdata::GetData> const & pgd);
+
+        //! A destructor.
+        /*!
+            デストラクタ
+        */
+        ~TDXScene() = default;
+
+        // #endregion コンストラクタ・デストラクタ
+
+        // #region メンバ関数
+
+        HRESULT Init(ID3D10Device* pd3dDevice);
+        HRESULT MsgPrc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+        HRESULT OnFrameMove(double fTime, float fElapsedTime, void* pUserContext);
+        HRESULT OnRender(ID3D10Device* pd3dDevice, double fTime, float fElapsedTime, void* pUserContext);
+        HRESULT OnResize(ID3D10Device* pd3dDevice, IDXGISwapChain* pSwapChain,
+            const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc, void* pUserContext);
+
+        //! A public member function.
+        /*!
+            再描画する
+            \param m 磁気量子数
+            \param pd3dDevice DirectXデバイスへのスマートポインタ
+            \param reim 実部を描画するか、虚部を描画するか
+            \return 再描画が成功したかどうか
+        */
+        HRESULT RedrawFunc(std::int32_t m, ID3D10Device * pd3dDevice, TDXScene::Re_Im_type reim);
+
+    private:
+
+        //! A private member function.
+        /*!
+            SimpleVertex2のデータをクリアし、新しいデータを詰める
+            \param m 磁気量子数
+            \param reim 実部を描画するか、虚部を描画するか
+            \param ver 対象のSimpleVertex2
+        */
+        void ClearFillSimpleVertex2(std::int32_t m, TDXScene::Re_Im_type reim);
+
+        //! A private member function.
+        /*!
+            SimpleVertex2にデータを詰める
+            \param m 磁気量子数
+            \param reim 実部を描画するか、虚部を描画するか
+            \param ver 対象のSimpleVertex2
+        */
+        void FillSimpleVertex2(std::int32_t m, TDXScene::Re_Im_type reim, SimpleVertex2 & ver);
+
+        // #endregion メンバ関数
+
+        // #region プロパティ
+
+    public:
+        //! A property.
+        /*!
+            データオブジェクトのスマートポインタのプロパティ
+        */
+        utility::Property<std::shared_ptr<getdata::GetData>> Pgd;
+
+        //! A property.
+        /*!
+            再描画するかどうか
+        */
+        utility::Property<bool> Redraw;
+
+        //! A property.
+        /*!
+            スレッドへのスマートポインタのプロパティ
+        */
+        utility::Property<std::shared_ptr<std::thread>> Th;
+
+        //! A property.
+        /*!
+            スレッドを強制終了するかどうか
+        */
+        utility::Property<bool> Thread_end;
+
+        // #endregion プロパティ
+
+        // #region メンバ変数
+
+    private:
+        //! A private static member variable (constant).
+        /*!
+            電子のサンプル点
+        */
+        static std::size_t const N = 500000;
+
+        //! A private member variable.
+        /*!
+            A model viewing camera
+        */
+        CModelViewerCamera                  camera;
+
+        ID3D10EffectShaderResourceVariable* diffuseVariable;
+
+        //! A private member variable.
+        /*!
+            エフェクト＝シェーダプログラムを読ませるところ
+        */
+        std::unique_ptr<ID3D10Effect, utility::Safe_Release<ID3D10Effect>> effect;
+
+        D3DXVECTOR4							lightDir;
+
+        ID3D10EffectVectorVariable*		    lightDirVariable;
+
+        //! A private member variable.
+        /*!
+            メッシュの色
+        */
+        D3DXVECTOR4                         meshColor;
+
+        ID3D10EffectVectorVariable*         meshColorVariable;
+
+        //! A private member variable.
+        /*!
+            射影行列
+        */
+        D3DXMATRIX                          projection;
+
+        ID3D10EffectMatrixVariable*         projectionVariable;
+
+        //! A private member variable.
+        /*!
+            rのメッシュとデータ
+        */
+        std::shared_ptr<getdata::GetData> pgd_;
+
+        //! A private member variable.
+        /*!
+            再描画するかどうか
+        */
+        bool redraw_ = true;
+
+        ID3D10EffectTechnique*              technique;
+
+        //! A private member variable.
+        /*!
+            スレッドを強制終了するかどうか
+        */
+        bool thread_end_ = false;
+
+        //! A private member variable.
+        /*!
+            スレッドへのポインタ
+        */
+        std::shared_ptr<std::thread> th_;
+
+        ID3D10ShaderResourceView * textureRV;
+
+        std::unique_ptr<ID3D10Buffer, utility::Safe_Release<ID3D10Buffer>> vertexBuffer;
+
+        std::unique_ptr<ID3D10InputLayout, utility::Safe_Release<ID3D10InputLayout>> vertexLayout;
+
+        //! A private member variable.
+        /*!
+            vertex buffer
+        */
+        std::vector<SimpleVertex2> vertices_;
+
+        //! A private member variable.
+        /*!
+            ビュー変換行列
+        */
+        D3DXMATRIX                          view;
+
+        ID3D10EffectMatrixVariable*         viewVariable;
+
+        //! A private member variable.
+        /*!
+            ワールド変換行列
+        */
+        D3DXMATRIX                          world;
+
+        ID3D10EffectMatrixVariable*         worldVariable;
+
+        // #region 禁止されたコンストラクタ・メンバ関数
+
+        //! A private constructor (deleted).
+        /*!
+            デフォルトコンストラクタ（禁止）
+        */
+        TDXScene() = delete;
+
+        //! A private copy constructor (deleted).
+        /*!
+            コピーコンストラクタ（禁止）
+        */
+        TDXScene(TDXScene const &) = delete;
+
+        //! A private member function (deleted).
+        /*!
+            operator=()の宣言（禁止）
+            \param コピー元のオブジェクト（未使用）
+            \return コピー元のオブジェクト
+        */
+        TDXScene & operator=(TDXScene const &) = delete;
+
+        // #endregion 禁止されたコンストラクタ・メンバ関数
     };
 
-    // #endregion 列挙型
-
-    // #region コンストラクタ・デストラクタ
-
-    //! A constructor.
+    //! A function.
     /*!
-        唯一のコンストラクタ
+        ロックをかけてbool型の変数を書き換える関数
+        \param dest 対象パラメータへの参照
+        \param source 書き換える値 
     */
-    TDXScene(std::shared_ptr<getdata::GetData> const & pgd);
-
-    //! A destructor.
-    /*!
-        デストラクタ
-    */
-    ~TDXScene() = default;
-	
-    // #endregion コンストラクタ・デストラクタ
-
-    // #region メンバ関数
-
-    HRESULT Init(ID3D10Device* pd3dDevice);
-    HRESULT MsgPrc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    HRESULT OnFrameMove( double fTime, float fElapsedTime, void* pUserContext );
-    HRESULT OnRender( ID3D10Device* pd3dDevice, double fTime, float fElapsedTime, void* pUserContext );
-    HRESULT OnResize( ID3D10Device* pd3dDevice, IDXGISwapChain* pSwapChain,
-                                    const DXGI_SURFACE_DESC* pBackBufferSurfaceDesc, void* pUserContext );
-
-    //! A public member function.
-    /*!
-        再描画する
-        \param m 磁気量子数
-        \param pd3dDevice DirectXデバイスへのスマートポインタ
-        \param reim 実部を描画するか、虚部を描画するか
-        \return 再描画が成功したかどうか
-    */
-    HRESULT Redraw(std::int32_t m, ID3D10Device * pd3dDevice, TDXScene::Re_Im_type reim);
-
-private:
-
-    //! A private member function.
-    /*!
-        SimpleVertex2のデータをクリアし、新しいデータを詰める
-        \param m 磁気量子数
-        \param reim 実部を描画するか、虚部を描画するか
-        \param ver 対象のSimpleVertex2
-    */
-    void ClearFillSimpleVertex2(std::int32_t m, TDXScene::Re_Im_type reim);
-
-    //! A private member function.
-    /*!
-        SimpleVertex2にデータを詰める
-        \param m 磁気量子数
-        \param reim 実部を描画するか、虚部を描画するか
-        \param ver 対象のSimpleVertex2
-    */
-    void FillSimpleVertex2(std::int32_t m, TDXScene::Re_Im_type reim, SimpleVertex2 & ver);
-       
-
-    // #endregion メンバ関数
-
-    // #region プロパティ
-
-public:
-    //! A property.
-    /*!
-        データオブジェクトのスマートポインタのプロパティ
-    */
-    utility::Property<std::shared_ptr<getdata::GetData>> Pgd;
-
-    // #endregion プロパティ
-
-    // #region メンバ変数
-
-private:
-    //! A private static member variable (constant).
-    /*!
-        波動関数描画の最大ループ回数
-    */
-    static auto const LOOPMAX = 5000;
-
-    //! A private static member variable (constant).
-    /*!
-        電子のサンプル点
-    */
-    static std::size_t const N = 500000;
-    
-    //! A private member variable.
-    /*!
-        A model viewing camera
-    */
-    CModelViewerCamera                  camera;
-
-    ID3D10EffectShaderResourceVariable* diffuseVariable;
-    
-    //! A private member variable.
-    /*!
-        エフェクト＝シェーダプログラムを読ませるところ
-    */
-    std::unique_ptr<ID3D10Effect, utility::Safe_Release<ID3D10Effect>> effect;
-    
-    D3DXVECTOR4							lightDir;
-
-    ID3D10EffectVectorVariable*		    lightDirVariable;
-    
-    //! A private member variable.
-    /*!
-        メッシュの色
-    */
-    D3DXVECTOR4                         meshColor;
-
-    ID3D10EffectVectorVariable*         meshColorVariable;
-    
-    //! A private member variable.
-    /*!
-        射影行列
-    */
-    D3DXMATRIX                          projection;
-
-
-    ID3D10EffectMatrixVariable*         projectionVariable;
-
-    //! A private member variable (constant).
-    /*!
-        rのメッシュとデータ
-    */
-    std::shared_ptr<getdata::GetData> pgd_;
-
-public:
-    bool redraw = true;
-
-    ID3D10EffectTechnique*              technique;
-
-public:
-    std::thread th;
-
-    bool thread_end;
-
-    ID3D10ShaderResourceView * textureRV;
-    
-    std::unique_ptr<ID3D10Buffer, utility::Safe_Release<ID3D10Buffer>> vertexBuffer;
-
-    std::unique_ptr<ID3D10InputLayout, utility::Safe_Release<ID3D10InputLayout>> vertexLayout;
-    
-    //! A private member variable.
-    /*!
-        vertex buffer
-    */
-    std::vector<SimpleVertex2> vertices;
-    
-    //! A private member variable.
-    /*!
-        ビュー変換行列
-    */
-    D3DXMATRIX                          view;
-
-    ID3D10EffectMatrixVariable*         viewVariable;
-    
-    //! A private member variable.
-    /*!
-        ワールド変換行列
-    */
-    D3DXMATRIX                          world;
-        
-    ID3D10EffectMatrixVariable*         worldVariable;
-        
-    // #region 禁止されたコンストラクタ・メンバ関数
-    
-    //! A private constructor (deleted).
-    /*!
-        デフォルトコンストラクタ（禁止）
-    */
-    TDXScene() = delete;
-
-    //! A private copy constructor (deleted).
-    /*!
-        コピーコンストラクタ（禁止）
-    */
-    TDXScene(TDXScene const &) = delete;
-
-    //! A private member function (deleted).
-    /*!
-        operator=()の宣言（禁止）
-        \param コピー元のオブジェクト（未使用）
-        \return コピー元のオブジェクト
-    */
-    TDXScene & operator=(TDXScene const &) = delete;
-
-    // #endregion 禁止されたコンストラクタ・メンバ関数
-};
+    void rewritewithlock(bool & dest, bool source);
+}
 
 #endif  // _TDXSCENE_H_
