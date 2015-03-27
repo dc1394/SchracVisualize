@@ -207,9 +207,9 @@ HRESULT TDXScene::OnResize( ID3D10Device* pd3dDevice, IDXGISwapChain* pSwapChain
 
 HRESULT TDXScene::Redraw(std::int32_t m, ID3D10Device * pd3dDevice, TDXScene::Re_Im_type reim)
 {
-    if (first) {
+    if (redraw) {
         th = std::thread([this, m, reim]{ ClearFillSimpleVertex2(m, reim); });
-        first = false;
+        redraw = false;
     }
 
     D3D10_BUFFER_DESC bd;
@@ -231,8 +231,6 @@ HRESULT TDXScene::Redraw(std::int32_t m, ID3D10Device * pd3dDevice, TDXScene::Re
     UINT offset = 0;
     pd3dDevice->IASetVertexBuffers(0, 1, &vertexBuffertmp, &stride, &offset);
     vertexBuffer.reset(vertexBuffertmp);
-    
-    //th.join();
     
     return S_OK;
 }
@@ -270,18 +268,20 @@ void TDXScene::FillSimpleVertex2(std::int32_t m, TDXScene::Re_Im_type reim, Simp
 
     auto const n = static_cast<double>(pgd_->N);
     auto const rmax = (2.3622 * n + 3.3340) * n + 1.3228;
+
     MyRand mr(-rmax, rmax);
-    MyRand mr2(pgd_->Funcmin, pgd_->Funcmax);
+    auto const rmin = pgd_->R_meshmin();
+    double max;
+    do {
+        max = mr.myrand();
+    } while (std::fabs(max) < rmin);
+
+    MyRand mr2(pgd_->Funcmin, (*pgd_)(std::fabs(max)));
 
     for (auto i = 0; i < LOOPMAX; i++) {
         x = mr.myrand();
         y = mr.myrand();
         z = mr.myrand();
-
-        auto const rmin = pgd_->R_meshmin();
-        if (std::fabs(x) < rmin || std::fabs(y) < rmin || std::fabs(z) < rmin) {
-            continue;
-        }
 
         p = mr2.myrand();
         auto const r = std::sqrt(x * x + y * y + z * z);
@@ -290,7 +290,7 @@ void TDXScene::FillSimpleVertex2(std::int32_t m, TDXScene::Re_Im_type reim, Simp
         case getdata::GetData::Rho_Wf_type::RHO:
         {
             auto const phi = std::acos(x / std::sqrt(x * x + y * y));
-            pp = std::abs((*pgd_)(r)* boost::math::spherical_harmonic(pgd_->L, m, std::acos(z / r), phi));
+            pp = std::abs((*pgd_)(r) * boost::math::spherical_harmonic(pgd_->L, m, std::acos(z / r), phi));
             pp *= pp;
         }
         break;
@@ -313,7 +313,7 @@ void TDXScene::FillSimpleVertex2(std::int32_t m, TDXScene::Re_Im_type reim, Simp
                 break;
             }
 
-            pp = (*pgd_)(r)* ylm;
+            pp = (*pgd_)(r) * ylm;
         }
         break;
 

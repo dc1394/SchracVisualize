@@ -146,8 +146,6 @@ private:
 
     ID3D10EffectShaderResourceVariable* diffuseVariable;
     
-    bool first = true;
-
     //! A private member variable.
     /*!
         エフェクト＝シェーダプログラムを読ませるところ
@@ -180,7 +178,10 @@ private:
         rのメッシュとデータ
     */
     std::shared_ptr<getdata::GetData> pgd_;
-    
+
+public:
+    bool redraw = true;
+
     ID3D10EffectTechnique*              technique;
 
 public:
