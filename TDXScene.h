@@ -136,7 +136,7 @@ private:
     /*!
         電子のサンプル点
     */
-    static std::size_t const N = 100;
+    static std::size_t const N = 500000;
     
     //! A private member variable.
     /*!

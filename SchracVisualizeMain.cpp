@@ -376,6 +376,7 @@ void CALLBACK OnD3D10FrameRender( ID3D10Device* pd3dDevice, double fTime, float 
             
             if (scene->thread_end) {
                 scene->th.join();
+                scene->thread_end = false;
             }
 
             //redraw = false;
