@@ -130,10 +130,7 @@ namespace tdxscene {
         D3DXMatrixIdentity(&world);
 
         // Initialize the view matrix
-        auto const pos = static_cast<float>(rmax) * 1.5f;
-        D3DXVECTOR3 Eye(0.0f, pos, -pos);
-        D3DXVECTOR3 At(0.0f, 0.0f, 0.0f);
-        camera.SetViewParams(&Eye, &At);
+        SetCamera();
 
         return S_OK;
     }
@@ -287,13 +284,13 @@ namespace tdxscene {
 
         MyRand mr(-rmax, rmax);
 
-        auto const rmin = pgd_->R_meshmin();
-        double max;
+        auto const rmeshmin = pgd_->R_meshmin();
+        double rm;
         do {
-            max = mr.myrand();
-        } while (std::fabs(max) < rmin);
+            rm = mr.myrand();
+        } while (std::fabs(rm) < rmeshmin);
 
-        MyRand mr2(pgd_->Funcmin, (*pgd_)(std::fabs(max)));
+        MyRand mr2(pgd_->Funcmin, (*pgd_)(std::fabs(rm)));
 
         while (true) {
             if (thread_end_) {
@@ -365,7 +362,7 @@ namespace tdxscene {
     void TDXScene::SetCamera()
     {
         // Initialize the view matrix
-        auto const pos = static_cast<float>(rmax) * 1.25f;
+        auto const pos = static_cast<float>(rmax) * 1.2f;
         D3DXVECTOR3 Eye(0.0f, pos, -pos);
         D3DXVECTOR3 At(0.0f, 0.0f, 0.0f);
         camera.SetViewParams(&Eye, &At);

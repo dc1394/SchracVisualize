@@ -79,12 +79,6 @@ namespace getdata {
 
         //! A property.
         /*!
-            関数の最大値のプロパティ
-        */
-        Property<double> const Funcmax;
-
-        //! A property.
-        /*!
             関数の最小値のプロパティ
         */
         Property<double> const Funcmin;
@@ -135,12 +129,6 @@ namespace getdata {
             元素名
         */
         std::string atomname_;
-
-        //!  A private member variable.
-        /*!
-            関数の最大値
-        */
-        double funcmax_;
 
         //!  A private member variable.
         /*!
