@@ -1,8 +1,8 @@
 ﻿/*! \file getdata.h
-    \brief rのメッシュと、そのメッシュにおける電子密度を与えるクラスの宣言
+\brief rのメッシュと、そのメッシュにおける電子密度を与えるクラスの宣言
 
-    Copyright © 2015 @dc1394 All Rights Reserved.
-    This software is released under the BSD-2 License.
+Copyright © 2015 @dc1394 All Rights Reserved.
+This software is released under the BSD-2 License.
 */
 
 #ifndef _GETRMESHANDRHO_H_
@@ -21,7 +21,7 @@ namespace getdata {
 
     //! A class.
     /*!
-        rのメッシュと、そのメッシュにおける動径波動関数を与えるクラス
+    rのメッシュと、そのメッシュにおける動径波動関数を与えるクラス
     */
     class GetData final {
         // #region 列挙型
@@ -29,7 +29,7 @@ namespace getdata {
     public:
         //!  A enumerated type
         /*!
-            密度か動径波動関数かを表す列挙型
+        密度か動径波動関数かを表す列挙型
         */
         enum class Rho_Wf_type {
             // 密度
@@ -44,14 +44,14 @@ namespace getdata {
 
         //! A constructor.
         /*!
-            唯一のコンストラクタ
-            \param filename rのメッシュと、そのメッシュにおける電子密度が記録されたデータファイル名
+        唯一のコンストラクタ
+        \param filename rのメッシュと、そのメッシュにおける電子密度が記録されたデータファイル名
         */
         GetData(std::string const & filename);
 
         //! A destructor.
         /*!
-            デフォルトデストラクタ
+        デフォルトデストラクタ
         */
         ~GetData() = default;
 
@@ -61,78 +61,90 @@ namespace getdata {
 
         //!  A public member function (const).
         /*!
-            関数の値を返す
-            \param r rの値
-            \return 関数の値
+        関数の値を返す
+        \param r rの値
+        \return 関数の値
         */
         double operator()(double r) const;
 
         // #endregion メンバ関数
-        
+
         // #region プロパティ
 
         //! A property.
         /*!
-            元素名
+        元素名
         */
         Property<std::string> Atomname;
 
         //! A property.
         /*!
-            関数の最小値のプロパティ
+        関数の最大値のプロパティ
+        */
+        Property<double> const Funcmax;
+
+        //! A property.
+        /*!
+        関数の最小値のプロパティ
         */
         Property<double> const Funcmin;
 
         //!  A property.
         /*!
-            方位量子数へのプロパティ
+        方位量子数へのプロパティ
         */
         Property<std::uint32_t> const L;
 
         //!  A property.
         /*!
-            主量子数へのプロパティ
+        主量子数へのプロパティ
         */
         Property<std::int32_t> const N;
 
         //!  A property.
         /*!
-            軌道へのプロパティ
+        軌道へのプロパティ
         */
         Property<std::string> const Orbital;
 
         //!  A private member variable.
         /*!
-            解く方程式のタイプへのプロパティ
+        解く方程式のタイプへのプロパティ
         */
         Property<GetData::Rho_Wf_type> const Rho_wf_type_;
-        
+
         //! A property.
         /*!
-            rのメッシュの最小値のプロパティ
+        rのメッシュの最小値のプロパティ
         */
         Property<double> const R_meshmin;
-        
+
         // #endregion プロパティ
 
         // #region メンバ変数
-        
+
     private:
         //! A private member variable.
         /*!
-            gsl_interp_accelへのスマートポインタ
+        gsl_interp_accelへのスマートポインタ
         */
         std::unique_ptr<gsl_interp_accel, decltype(gsl_interp_accel_deleter)> const acc_;
 
         //!  A private member variable.
         /*!
-            元素名
+        元素名
         */
         std::string atomname_;
 
         //!  A private member variable.
         /*!
-            関数の最小値
+        関数の最大値
+        */
+        double funcmax_;
+
+        //!  A private member variable.
+        /*!
+        関数の最小値
         */
         double funcmin_;
 
@@ -144,31 +156,31 @@ namespace getdata {
 
         //!  A private member variable.
         /*!
-            主量子数
+        主量子数
         */
         std::int32_t n_;
 
         //!  A private member variable.
         /*!
-            軌道
+        軌道
         */
         std::string orbital_;
-        
+
         //!  A private member variable.
         /*!
-            解く方程式のタイプ
+        解く方程式のタイプ
         */
         GetData::Rho_Wf_type rho_wf_type_;
-        
+
         //!  A private member variable.
         /*!
-            rのメッシュの最小値
+        rのメッシュの最小値
         */
         double r_meshmin_;
 
         //! A private member variable.
         /*!
-            gsl_interp_typeへのスマートポインタ
+        gsl_interp_typeへのスマートポインタ
         */
         std::unique_ptr<gsl_spline, decltype(gsl_spline_deleter)> spline_;
 
@@ -178,21 +190,21 @@ namespace getdata {
 
         //! A private constructor (deleted).
         /*!
-            デフォルトコンストラクタ（禁止）
+        デフォルトコンストラクタ（禁止）
         */
         GetData() = delete;
 
         //! A private copy constructor (deleted).
         /*!
-            コピーコンストラクタ（禁止）
+        コピーコンストラクタ（禁止）
         */
         GetData(GetData const &) = delete;
 
         //! A private member function (deleted).
         /*!
-            operator=()の宣言（禁止）
-            \param コピー元のオブジェクト（未使用）
-            \return コピー元のオブジェクト
+        operator=()の宣言（禁止）
+        \param コピー元のオブジェクト（未使用）
+        \return コピー元のオブジェクト
         */
         GetData & operator=(GetData const &) = delete;
 

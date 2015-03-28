@@ -276,21 +276,11 @@ namespace tdxscene {
             return;
         }
 
-        using namespace myrandom;
-
-        MyRand mr(-rmax, rmax);
-
-        auto const rmeshmin = pgd_->R_meshmin();
-        double rm;
-        do {
-            rm = mr.myrand();
-        } while (std::fabs(rm) < rmeshmin);
-
-        MyRand mr2(pgd_->Funcmin, (*pgd_)(std::fabs(rm)));
-
         auto sign = 0;
-        auto pp = 0.0;
         double x, y, z;
+
+        myrandom::MyRand mr(-rmax, rmax);
+        myrandom::MyRand mr2(pgd_->Funcmin, pgd_->Funcmax);
 
         while (true) {
             if (thread_end_) {
@@ -300,8 +290,13 @@ namespace tdxscene {
             x = mr.myrand();
             y = mr.myrand();
             z = mr.myrand();
-            auto const r = std::sqrt(x * x + y * y + z * z);
 
+            auto const r = std::sqrt(x * x + y * y + z * z);
+            if (r < pgd_->R_meshmin()) {
+                continue;
+            }
+
+            auto pp = 0.0;
             switch (pgd_->Rho_wf_type_) {
             case getdata::GetData::Rho_Wf_type::RHO:
             {

@@ -1,8 +1,8 @@
 ﻿/*! \file getdata.h
-    \brief rのメッシュと、そのメッシュにおける電子密度を与えるクラスの実装
+\brief rのメッシュと、そのメッシュにおける電子密度を与えるクラスの実装
 
-    Copyright © 2015 @dc1394 All Rights Reserved.
-    This software is released under the BSD-2 License.
+Copyright © 2015 @dc1394 All Rights Reserved.
+This software is released under the BSD-2 License.
 */
 
 #include "DXUT.h"
@@ -17,9 +17,10 @@
 
 namespace getdata {
     // #region コンストラクタ
-    
+
     GetData::GetData(std::string const & filename) :
         Atomname([this] { return atomname_; }, nullptr),
+        Funcmax([this] { return funcmax_; }, nullptr),
         Funcmin([this] { return funcmin_; }, nullptr),
         L([this] { return l_; }, nullptr),
         N([this] { return n_; }, nullptr),
@@ -29,7 +30,7 @@ namespace getdata {
         acc_(gsl_interp_accel_alloc(), gsl_interp_accel_deleter)
     {
         using namespace boost::algorithm;
-        
+
         // トークン分割
         std::vector<std::string> tokens;
         split(tokens, filename, is_any_of("_"), token_compress_on);
@@ -56,7 +57,7 @@ namespace getdata {
 
         orbital_ = tokens[2][0];
         n_ = static_cast<std::int32_t>(tokens[2][0] - '0');
-  
+
         switch (tokens[2][1]) {
         case 's':
             l_ = 0;
@@ -90,13 +91,15 @@ namespace getdata {
 
         std::vector<double> r_mesh, phi;
         std::tie(r_mesh, phi) = ReadDataFile().readdatafile(filename);
-        
+
         BOOST_ASSERT(r_mesh.size() == phi.size());
-        
+
+        funcmax_ = *boost::max_element(phi);
+
         std::vector<double> temp(phi);
         boost::for_each(temp, [](double & v) { v = v >= 0.0 ? 0.0 : -v; });
         funcmin_ = -*boost::max_element(temp);
-        
+
         r_meshmin_ = r_mesh[0];
 
         spline_ = std::unique_ptr<gsl_spline, decltype(gsl_spline_deleter)>(
