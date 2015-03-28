@@ -283,17 +283,8 @@ namespace tdxscene {
         auto p = 0.0, pp = 0.0;
         double x, y, z;
 
-        using namespace myrandom;
-
-        MyRand mr(-rmax, rmax);
-
-        auto const rmin = pgd_->R_meshmin();
-        double max;
-        do {
-            max = mr.myrand();
-        } while (std::fabs(max) < rmin);
-
-        MyRand mr2(pgd_->Funcmin, (*pgd_)(std::fabs(max)));
+        myrandom::MyRand mr(-rmax, rmax);
+        myrandom::MyRand mr2(pgd_->Funcmin, pgd_->Funcmax);
 
         while (true) {
             if (thread_end_) {
@@ -305,6 +296,10 @@ namespace tdxscene {
             z = mr.myrand();
 
             auto const r = std::sqrt(x * x + y * y + z * z);
+            auto const rmin = pgd_->R_meshmin();
+            if (r < rmin) {
+                continue;
+            }
 
             p = mr2.myrand();
            
@@ -365,7 +360,7 @@ namespace tdxscene {
     void TDXScene::SetCamera()
     {
         // Initialize the view matrix
-        auto const pos = static_cast<float>(rmax) * 1.25f;
+        auto const pos = static_cast<float>(rmax) * 1.2f;
         D3DXVECTOR3 Eye(0.0f, pos, -pos);
         D3DXVECTOR3 At(0.0f, 0.0f, 0.0f);
         camera.SetViewParams(&Eye, &At);
