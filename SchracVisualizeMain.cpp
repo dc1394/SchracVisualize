@@ -16,6 +16,8 @@
 #include <string>       // for std::wstring, std::to_string
 #include <malloc.h>     // for _aligned_malloc, _aligned_free 
 
+using namespace tdxscene;
+
 //! A global variable.
 /*!
     _aligned_mallocで確保されたメモリを解放するラムダ式
@@ -125,9 +127,21 @@ void ReadData();
 
 //! A function.
 /*!
+    再描画フラグをtrueにする
+*/
+void RedrawFlagTrue();
+
+//! A function.
+/*!
     UIを配置する
 */
 void SetUI();
+
+//! A function.
+/*!
+    描画を中止する
+*/
+void StopDraw();
 
 //--------------------------------------------------------------------------------------
 // Initialize the app 
@@ -275,22 +289,22 @@ void CALLBACK OnD3D10FrameRender( ID3D10Device* pd3dDevice, double fTime, float 
         auto const index = drawdata & 0x0F;
         switch (pgd->L) {
         case 0:
-            scene->Redraw(0, pd3dDevice, reim);
+            scene->RedrawFunc(0, pd3dDevice, reim);
             break;
 
         case 1:
         {
             switch (index) {
             case 1:
-                scene->Redraw(1, pd3dDevice, reim);
+                scene->RedrawFunc(1, pd3dDevice, reim);
                 break;
 
             case 2:
-                scene->Redraw(-1, pd3dDevice, reim);
+                scene->RedrawFunc(-1, pd3dDevice, reim);
                 break;
 
             case 3:
-                scene->Redraw(0, pd3dDevice, reim);
+                scene->RedrawFunc(0, pd3dDevice, reim);
                 break;
 
             default:
@@ -304,23 +318,23 @@ void CALLBACK OnD3D10FrameRender( ID3D10Device* pd3dDevice, double fTime, float 
         {
             switch (index) {
             case 1:
-                scene->Redraw(-2, pd3dDevice, reim);
+                scene->RedrawFunc(-2, pd3dDevice, reim);
                 break;
 
             case 2:
-                scene->Redraw(-1, pd3dDevice, reim);
+                scene->RedrawFunc(-1, pd3dDevice, reim);
                 break;
 
             case 3:
-                scene->Redraw(1, pd3dDevice, reim);
+                scene->RedrawFunc(1, pd3dDevice, reim);
                 break;
 
             case 4:
-                scene->Redraw(2, pd3dDevice, reim);
+                scene->RedrawFunc(2, pd3dDevice, reim);
                 break;
 
             case 5:
-                scene->Redraw(0, pd3dDevice, reim);
+                scene->RedrawFunc(0, pd3dDevice, reim);
                 break;
                 
             default:
@@ -334,31 +348,31 @@ void CALLBACK OnD3D10FrameRender( ID3D10Device* pd3dDevice, double fTime, float 
         {
             switch (index) {
             case 1:
-                scene->Redraw(1, pd3dDevice, reim);
+                scene->RedrawFunc(1, pd3dDevice, reim);
                 break;
 
             case 2:
-                scene->Redraw(-1, pd3dDevice, reim);
+                scene->RedrawFunc(-1, pd3dDevice, reim);
                 break;
 
             case 3:
-                scene->Redraw(2, pd3dDevice, reim);
+                scene->RedrawFunc(2, pd3dDevice, reim);
                 break;
 
             case 4:
-                scene->Redraw(-2, pd3dDevice, reim);
+                scene->RedrawFunc(-2, pd3dDevice, reim);
                 break;
 
             case 5:
-                scene->Redraw(3, pd3dDevice, reim);
+                scene->RedrawFunc(3, pd3dDevice, reim);
                 break;
 
             case 6:
-                scene->Redraw(-3, pd3dDevice, reim);
+                scene->RedrawFunc(-3, pd3dDevice, reim);
                 break;
 
             case 7:
-                scene->Redraw(0, pd3dDevice, reim);
+                scene->RedrawFunc(0, pd3dDevice, reim);
                 break;
 
             default:
@@ -394,6 +408,8 @@ void CALLBACK OnD3D10ReleasingSwapChain( void* pUserContext )
 //--------------------------------------------------------------------------------------
 void CALLBACK OnD3D10DestroyDevice( void* pUserContext )
 {
+    StopDraw();
+
     g_DialogResourceManager.OnD3D10DestroyDevice();
     g_D3DSettingsDlg.OnD3D10DestroyDevice();
     DXUTGetGlobalResourceCache().OnDestroyDevice();
@@ -489,10 +505,12 @@ void CALLBACK OnGUIEvent( UINT nEvent, int nControlID, CDXUTControl* pControl, v
             break;
 
         case IDC_READDATA:
+            StopDraw();
             ReadData();
             SetUI();
             scene->Pgd = pgd;
-            redraw = true;
+            scene->Thread_end = false;
+            scene->Redraw = true;
             ::SetWindowText(DXUTGetHWND(), CreateWindowTitle().c_str());
             break;
 
@@ -502,19 +520,19 @@ void CALLBACK OnGUIEvent( UINT nEvent, int nControlID, CDXUTControl* pControl, v
             if (pItem)
             {
                 drawdata = reinterpret_cast<std::uint32_t>(pItem->pData);
-                redraw = true;
+                RedrawFlagTrue();
             }
             break;
         }
 
         case IDC_RADIOA:
             reim = TDXScene::Re_Im_type::REAL;
-            redraw = true;
+            RedrawFlagTrue();
             break;
 
         case IDC_RADIOB:
             reim = TDXScene::Re_Im_type::IMAGINARY;
-            redraw = true;
+            RedrawFlagTrue();
             break;
 
         default:
@@ -554,6 +572,14 @@ void ReadData()
         }
         break;
     }
+}
+
+
+void RedrawFlagTrue()
+{
+    StopDraw();
+    scene->Thread_end = false;
+    scene->Redraw = true;
 }
 
 
@@ -629,3 +655,11 @@ void SetUI()
     }
 }
 
+
+void StopDraw()
+{
+    scene->Thread_end = true;
+    if (scene->Pth()->joinable()) {
+        scene->Pth()->join();
+    }
+}

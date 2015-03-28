@@ -14,22 +14,26 @@
 #include <boost/assert.hpp>                                     // for BOOST_ASSERT
 #include <boost/math/special_functions/spherical_harmonic.hpp>  // for boost::math::spherical_harmonic
 #include <boost/range/algorithm.hpp>                            // for boost::fill
-#include <gsl/gsl_sf_legendre.h>                                // for gsl_sf_legendre_sphPlm
 #include <tbb/parallel_for.h>                                   // for tbb::parallel_for
 #include <tbb/partitioner.h>                                    // for tbb::auto_partitioner
 #include <tbb/task_scheduler_init.h>                            // for tbb::task_scheduler_init
 
 namespace tdxscene {
     TDXScene::TDXScene(std::shared_ptr<getdata::GetData> const & pgd) :
-        Pgd(nullptr, [this](std::shared_ptr<getdata::GetData> const & val) { return pgd_ = val; }),
-        Redraw(nullptr, [this](bool redraw){ rewritewithlock(redraw_, redraw); }),
-        Th([this]{ return th_; }, nullptr),
-        Thread_end(nullptr, [this](bool thread_end){ rewritewithlock(thread_end_, thread_end); }),
+        Pth([this]{ return pth_; }, nullptr),
+        Pgd(nullptr, [this](std::shared_ptr<getdata::GetData> const & val) {
+            rmax = GetRmax(val);
+            SetCamera();
+            return pgd_ = val;
+        }),
+        Redraw(nullptr, [this](bool redraw){ return redraw_ = redraw; }),
+        Thread_end(nullptr, [this](bool thread_end){ return RewriteWithLock(thread_end_, thread_end); }),
         lightDirVariable(nullptr),
         meshColor(0.7f, 0.7f, 0.7f, 1.0f),
         meshColorVariable(nullptr),
         projectionVariable(nullptr),
         pgd_(pgd),
+        rmax(GetRmax(pgd)),
         technique(nullptr),
         textureRV(nullptr),
         vertices_(N),
@@ -126,7 +130,8 @@ namespace tdxscene {
         D3DXMatrixIdentity(&world);
 
         // Initialize the view matrix
-        D3DXVECTOR3 Eye(0.0f, 50.0f, -50.0f);
+        auto const pos = static_cast<float>(rmax) * 1.5f;
+        D3DXVECTOR3 Eye(0.0f, pos, -pos);
         D3DXVECTOR3 At(0.0f, 0.0f, 0.0f);
         camera.SetViewParams(&Eye, &At);
 
@@ -213,12 +218,15 @@ namespace tdxscene {
     HRESULT TDXScene::RedrawFunc(std::int32_t m, ID3D10Device * pd3dDevice, TDXScene::Re_Im_type reim)
     {
         if (redraw_) {
-            th_.reset();
-            th_ = std::make_shared<std::thread>([this, m, reim]{ ClearFillSimpleVertex2(m, reim); }, [](std::thread * pth)
+            pth_.reset(new std::thread([this, m, reim]{ ClearFillSimpleVertex2(m, reim); }), [this](std::thread * pth)
             {
                 if (pth->joinable()) {
+                    RewriteWithLock(thread_end_, true);
                     pth->join();
                 }
+
+                utility::Safe_Delete<std::thread> sd;
+                sd(pth);
             });
             redraw_ = false;
         }
@@ -262,29 +270,26 @@ namespace tdxscene {
             std::uint32_t(1),
             [this, m, reim](std::uint32_t i) { FillSimpleVertex2(m, reim, vertices_[i]); },
             tbb::auto_partitioner());
-
-        th_->join();
     }
 
 
     void TDXScene::FillSimpleVertex2(std::int32_t m, TDXScene::Re_Im_type reim, SimpleVertex2 & ver)
     {
+        if (thread_end_) {
+            return;
+        }
+
         auto sign = 0;
         auto p = 0.0, pp = 0.0;
         double x, y, z;
 
         using namespace myrandom;
 
-        auto const n = static_cast<double>(pgd_->N);
-        auto const rmax = (2.3622 * n + 3.3340) * n + 1.3228;
-
         MyRand mr(-rmax, rmax);
+
         auto const rmin = pgd_->R_meshmin();
         double max;
         do {
-            if (thread_end_) {
-                return;
-            }
             max = mr.myrand();
         } while (std::fabs(max) < rmin);
 
@@ -299,14 +304,15 @@ namespace tdxscene {
             y = mr.myrand();
             z = mr.myrand();
 
-            p = mr2.myrand();
             auto const r = std::sqrt(x * x + y * y + z * z);
 
+            p = mr2.myrand();
+           
             switch (pgd_->Rho_wf_type_) {
             case getdata::GetData::Rho_Wf_type::RHO:
             {
                 auto const phi = std::acos(x / std::sqrt(x * x + y * y));
-                pp = std::abs((*pgd_)(r)* boost::math::spherical_harmonic(pgd_->L, m, std::acos(z / r), phi));
+                pp = std::abs((*pgd_)(r) * boost::math::spherical_harmonic(pgd_->L, m, std::acos(z / r), phi));
                 pp *= pp;
             }
             break;
@@ -356,12 +362,30 @@ namespace tdxscene {
         ver.Col.a = 1.0f;
     }
 
-    void rewritewithlock(bool & dest, bool source)
+    void TDXScene::SetCamera()
+    {
+        // Initialize the view matrix
+        auto const pos = static_cast<float>(rmax) * 1.25f;
+        D3DXVECTOR3 Eye(0.0f, pos, -pos);
+        D3DXVECTOR3 At(0.0f, 0.0f, 0.0f);
+        camera.SetViewParams(&Eye, &At);
+    }
+
+
+    double GetRmax(std::shared_ptr<getdata::GetData> const & pgd)
+    {
+        auto const n = static_cast<double>(pgd->N);
+        return (2.3622 * n + 3.3340) * n + 1.3228;
+    }
+
+    bool RewriteWithLock(bool & dest, bool source)
     {
         std::mutex mtx;
         {
             std::lock_guard<std::mutex> lock(mtx);
             dest = source;
         }
+
+        return dest;
     }
 }

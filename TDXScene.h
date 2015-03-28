@@ -24,7 +24,7 @@ namespace tdxscene {
     //! A class.
     /*!
         画面描画クラス
-*/
+    */
     class TDXScene final {
 #ifndef	SIMPLEVER2
         // #region 構造体
@@ -89,7 +89,6 @@ namespace tdxscene {
         HRESULT RedrawFunc(std::int32_t m, ID3D10Device * pd3dDevice, TDXScene::Re_Im_type reim);
 
     private:
-
         //! A private member function.
         /*!
             SimpleVertex2のデータをクリアし、新しいデータを詰める
@@ -108,11 +107,23 @@ namespace tdxscene {
         */
         void FillSimpleVertex2(std::int32_t m, TDXScene::Re_Im_type reim, SimpleVertex2 & ver);
 
+        //! A private member function.
+        /*!
+            カメラの位置をセットする
+        */
+        void SetCamera();
+
         // #endregion メンバ関数
 
         // #region プロパティ
 
     public:
+        //! A property.
+        /*!
+            スレッドへのスマートポインタのプロパティ
+        */
+        utility::Property<std::shared_ptr<std::thread>> Pth;
+
         //! A property.
         /*!
             データオブジェクトのスマートポインタのプロパティ
@@ -124,13 +135,7 @@ namespace tdxscene {
             再描画するかどうか
         */
         utility::Property<bool> Redraw;
-
-        //! A property.
-        /*!
-            スレッドへのスマートポインタのプロパティ
-        */
-        utility::Property<std::shared_ptr<std::thread>> Th;
-
+                
         //! A property.
         /*!
             スレッドを強制終了するかどうか
@@ -184,6 +189,12 @@ namespace tdxscene {
 
         //! A private member variable.
         /*!
+            スレッドへのスマートポインタ
+        */
+        std::shared_ptr<std::thread> pth_;
+        
+        //! A private member variable.
+        /*!
             rのメッシュとデータ
         */
         std::shared_ptr<getdata::GetData> pgd_;
@@ -194,6 +205,12 @@ namespace tdxscene {
         */
         bool redraw_ = true;
 
+        //! A private member variable.
+        /*!
+            描画するrの最大値
+        */
+        double rmax;
+
         ID3D10EffectTechnique*              technique;
 
         //! A private member variable.
@@ -201,12 +218,6 @@ namespace tdxscene {
             スレッドを強制終了するかどうか
         */
         bool thread_end_ = false;
-
-        //! A private member variable.
-        /*!
-            スレッドへのポインタ
-        */
-        std::shared_ptr<std::thread> th_;
 
         ID3D10ShaderResourceView * textureRV;
 
@@ -263,11 +274,20 @@ namespace tdxscene {
 
     //! A function.
     /*!
+        データオブジェクトからrmaxを求める
+        \param pgd データオブジェクト
+        \return rmaxの値
+    */
+    double GetRmax(std::shared_ptr<getdata::GetData> const & pgd);
+
+    //! A function.
+    /*!
         ロックをかけてbool型の変数を書き換える関数
         \param dest 対象パラメータへの参照
-        \param source 書き換える値 
+        \param source 値
+        \return 書き換えた値
     */
-    void rewritewithlock(bool & dest, bool source);
+    bool RewriteWithLock(bool & dest, bool source);
 }
 
 #endif  // _TDXSCENE_H_
