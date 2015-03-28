@@ -20,7 +20,6 @@ namespace getdata {
     
     GetData::GetData(std::string const & filename) :
         Atomname([this] { return atomname_; }, nullptr),
-        Funcmax([this] { return funcmax_; }, nullptr),
         Funcmin([this] { return funcmin_; }, nullptr),
         L([this] { return l_; }, nullptr),
         N([this] { return n_; }, nullptr),
@@ -93,8 +92,6 @@ namespace getdata {
         std::tie(r_mesh, phi) = ReadDataFile().readdatafile(filename);
         
         BOOST_ASSERT(r_mesh.size() == phi.size());
-
-        funcmax_ = *boost::max_element(phi);
         
         std::vector<double> temp(phi);
         boost::for_each(temp, [](double & v) { v = v >= 0.0 ? 0.0 : -v; });

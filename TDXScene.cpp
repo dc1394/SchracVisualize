@@ -130,10 +130,7 @@ namespace tdxscene {
         D3DXMatrixIdentity(&world);
 
         // Initialize the view matrix
-        auto const pos = static_cast<float>(rmax) * 1.5f;
-        D3DXVECTOR3 Eye(0.0f, pos, -pos);
-        D3DXVECTOR3 At(0.0f, 0.0f, 0.0f);
-        camera.SetViewParams(&Eye, &At);
+        SetCamera();
 
         return S_OK;
     }
@@ -279,12 +276,21 @@ namespace tdxscene {
             return;
         }
 
-        auto sign = 0;
-        auto p = 0.0, pp = 0.0;
-        double x, y, z;
+        using namespace myrandom;
 
-        myrandom::MyRand mr(-rmax, rmax);
-        myrandom::MyRand mr2(pgd_->Funcmin, pgd_->Funcmax);
+        MyRand mr(-rmax, rmax);
+
+        auto const rmeshmin = pgd_->R_meshmin();
+        double rm;
+        do {
+            rm = mr.myrand();
+        } while (std::fabs(rm) < rmeshmin);
+
+        MyRand mr2(pgd_->Funcmin, (*pgd_)(std::fabs(rm)));
+
+        auto sign = 0;
+        auto pp = 0.0;
+        double x, y, z;
 
         while (true) {
             if (thread_end_) {
@@ -294,15 +300,8 @@ namespace tdxscene {
             x = mr.myrand();
             y = mr.myrand();
             z = mr.myrand();
-
             auto const r = std::sqrt(x * x + y * y + z * z);
-            auto const rmin = pgd_->R_meshmin();
-            if (r < rmin) {
-                continue;
-            }
 
-            p = mr2.myrand();
-           
             switch (pgd_->Rho_wf_type_) {
             case getdata::GetData::Rho_Wf_type::RHO:
             {
@@ -341,7 +340,7 @@ namespace tdxscene {
 
             sign = (pp > 0.0) - (pp < 0.0);
 
-            if ((std::fabs(pp) >= std::fabs(p)) ||
+            if ((std::fabs(pp) >= std::fabs(mr2.myrand())) ||
                 (!m && pgd_->Rho_wf_type_ == getdata::GetData::Rho_Wf_type::WF && reim == TDXScene::Re_Im_type::IMAGINARY)) {
                 break;
             }
