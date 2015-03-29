@@ -1,8 +1,8 @@
 ﻿/*! \file tdxscene.h
-    \brief TDXSceneクラスの実装
+\brief TDXSceneクラスの実装
 
-    Copyright ©  2015 @dc1394 All Rights Reserved.
-    This software is released under the BSD-2 License.
+Copyright ©  2015 @dc1394 All Rights Reserved.
+This software is released under the BSD-2 License.
 */
 
 #include "DXUT.h"
@@ -12,6 +12,7 @@
 #include "TDXScene.h"
 #include <mutex>                                                // for std::mutex
 #include <boost/assert.hpp>                                     // for BOOST_ASSERT
+#include <boost/cast.hpp>                                       // for boost::numeric_cast
 #include <boost/math/special_functions/spherical_harmonic.hpp>  // for boost::math::spherical_harmonic
 #include <boost/range/algorithm.hpp>                            // for boost::fill
 #include <tbb/parallel_for.h>                                   // for tbb::parallel_for
@@ -22,10 +23,10 @@ namespace tdxscene {
     TDXScene::TDXScene(std::shared_ptr<getdata::GetData> const & pgd) :
         Pth([this]{ return pth_; }, nullptr),
         Pgd(nullptr, [this](std::shared_ptr<getdata::GetData> const & val) {
-            rmax = GetRmax(val);
-            SetCamera();
-            return pgd_ = val;
-        }),
+        rmax = GetRmax(val);
+        SetCamera();
+        return pgd_ = val;
+    }),
         Redraw(nullptr, [this](bool redraw){ return redraw_ = redraw; }),
         Thread_end(nullptr, [this](bool thread_end){ return RewriteWithLock(thread_end_, thread_end); }),
         lightDirVariable(nullptr),
@@ -119,7 +120,13 @@ namespace tdxscene {
 
         // Set the input layout
         pd3dDevice->IASetInputLayout(vertexLayout.get());
-
+                
+        bd.Usage = D3D10_USAGE_DEFAULT;
+        bd.ByteWidth = sizeof(SimpleVertex2) * N;
+        bd.BindFlags = D3D10_BIND_VERTEX_BUFFER;
+        bd.CPUAccessFlags = 0;
+        bd.MiscFlags = 0;
+                
         // Set primitive topology
         pd3dDevice->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_POINTLIST);
 
@@ -138,7 +145,7 @@ namespace tdxscene {
 
     HRESULT TDXScene::MsgPrc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
-        return camera.HandleMessages(hWnd, uMsg, wParam, lParam);
+        return boost::numeric_cast<HRESULT>(camera.HandleMessages(hWnd, uMsg, wParam, lParam));
     }
 
 
@@ -161,7 +168,7 @@ namespace tdxscene {
         //
         // Clear the back buffer
         //
-        auto const ClearColor = { 0.0f, 0.0f, 0.0f, 1.0f }; // red, green, blue, alpha
+        auto const ClearColor = { 0.0f, 0.0f, 0.0f, 0.0f }; // red, green, blue, alpha
         auto pRTV = DXUTGetD3D10RenderTargetView();
         pd3dDevice->ClearRenderTargetView(pRTV, ClearColor.begin());
 
@@ -228,13 +235,7 @@ namespace tdxscene {
             redraw_ = false;
         }
 
-        D3D10_BUFFER_DESC bd;
-        bd.Usage = D3D10_USAGE_DEFAULT;
-        bd.ByteWidth = sizeof(SimpleVertex2) * N;
-        bd.BindFlags = D3D10_BIND_VERTEX_BUFFER;
-        bd.CPUAccessFlags = 0;
-        bd.MiscFlags = 0;
-        D3D10_SUBRESOURCE_DATA InitData;
+                
         InitData.pSysMem = vertices_.data();
 
         ID3D10Buffer * vertexBuffertmp;
@@ -243,7 +244,7 @@ namespace tdxscene {
         }
 
         // Set vertex buffer
-        auto stride = sizeof(SimpleVertex2);
+        UINT stride = static_cast<UINT>(sizeof(SimpleVertex2));
         UINT offset = 0;
         pd3dDevice->IASetVertexBuffers(0, 1, &vertexBuffertmp, &stride, &offset);
         vertexBuffer.reset(vertexBuffertmp);
@@ -263,7 +264,7 @@ namespace tdxscene {
 
         tbb::parallel_for(
             std::uint32_t(0),
-            N,
+            boost::numeric_cast<std::uint32_t>(N),
             std::uint32_t(1),
             [this, m, reim](std::uint32_t i) { FillSimpleVertex2(m, reim, vertices_[i]); },
             tbb::auto_partitioner());
@@ -301,7 +302,7 @@ namespace tdxscene {
             case getdata::GetData::Rho_Wf_type::RHO:
             {
                 auto const phi = std::acos(x / std::sqrt(x * x + y * y));
-                pp = std::abs((*pgd_)(r) * boost::math::spherical_harmonic(pgd_->L, m, std::acos(z / r), phi));
+                pp = std::abs((*pgd_)(r)* boost::math::spherical_harmonic(pgd_->L, m, std::acos(z / r), phi));
                 pp *= pp;
             }
             break;
@@ -354,7 +355,7 @@ namespace tdxscene {
     void TDXScene::SetCamera()
     {
         // Initialize the view matrix
-        auto const pos = static_cast<float>(rmax) * 1.2f;
+        auto const pos = static_cast<float>(rmax)* 1.2f;
         D3DXVECTOR3 Eye(0.0f, pos, -pos);
         D3DXVECTOR3 At(0.0f, 0.0f, 0.0f);
         camera.SetViewParams(&Eye, &At);

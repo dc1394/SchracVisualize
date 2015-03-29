@@ -1,9 +1,9 @@
 ﻿/*! \file SchracVisualizeMain.cpp
-    \brief メインファイル
+\brief メインファイル
 
-    Copyright ©  2015 @dc1394 All Rights Reserved.
-    (but this is originally adapted by Microsoft Corporation for Basic introduction to DXUT)
-    This software is released under the BSD-2 License.
+Copyright ©  2015 @dc1394 All Rights Reserved.
+(but this is originally adapted by Microsoft Corporation for Basic introduction to DXUT)
+This software is released under the BSD-2 License.
 */
 
 #include "DXUT.h"
@@ -30,11 +30,11 @@ auto const aligned_deleter = [](TDXScene * ptr)
     ptr = nullptr;
 };
 
-D3DXVECTOR4                         g_vMeshColor( 0.7f, 0.7f, 0.7f, 1.0f );
+D3DXVECTOR4                         g_vMeshColor(0.7f, 0.7f, 0.7f, 1.0f);
 
-CDXUTDialogResourceManager          g_DialogResourceManager;// manager for shared resources of dialogs
-CD3DSettingsDlg                     g_D3DSettingsDlg;       // Device settings dialog
-CDXUTDialog                         g_HUD;                  // manages the 3D UI
+CDXUTDialogResourceManager          g_DialogResourceManager;    // manager for shared resources of dialogs
+CD3DSettingsDlg                     g_D3DSettingsDlg;           // Device settings dialog
+CDXUTDialog                         g_HUD;                      // manages the 3D UI
 
 bool	ROT_FLAG = true;
 
@@ -43,12 +43,6 @@ bool	ROT_FLAG = true;
     描画する軌道の識別数値
 */
 auto drawdata = 1U;
-
-//! A global variable.
-/*!
-Font for drawing text
-*/
-std::unique_ptr<ID3DX10Font, utility::Safe_Release<ID3DX10Font>> font;
 
 //! A global variable.
 /*!
@@ -61,12 +55,6 @@ std::shared_ptr<getdata::GetData> pgd;
     描画クラスのオブジェクトへのスマートポインタ
 */
 std::unique_ptr<TDXScene, decltype(aligned_deleter)> scene;
-
-//! A global variable.
-/*!
-    Sprite for batching text drawing
-*/
-std::unique_ptr<ID3DX10Sprite, utility::Safe_Release<ID3DX10Sprite>> sprite;
 
 //! A global variable.
 /*!
@@ -95,22 +83,22 @@ auto reim = TDXScene::Re_Im_type::REAL;
 //--------------------------------------------------------------------------------------
 // Forward declarations 
 //--------------------------------------------------------------------------------------
-bool CALLBACK IsD3D10DeviceAcceptable( UINT Adapter, UINT Output, D3D10_DRIVER_TYPE DeviceType,
-                                       DXGI_FORMAT BufferFormat, bool bWindowed, void* pUserContext );
-HRESULT CALLBACK OnD3D10CreateDevice( ID3D10Device* pd3dDevice, const DXGI_SURFACE_DESC* pBufferSurfaceDesc,
-                                      void* pUserContext );
-HRESULT CALLBACK OnD3D10ResizedSwapChain( ID3D10Device* pd3dDevice, IDXGISwapChain* pSwapChain,
-                                          const DXGI_SURFACE_DESC* pBufferSurfaceDesc, void* pUserContext );
-void CALLBACK OnD3D10FrameRender( ID3D10Device* pd3dDevice, double fTime, float fElapsedTime, void* pUserContext );
-void CALLBACK OnD3D10ReleasingSwapChain( void* pUserContext );
-void CALLBACK OnD3D10DestroyDevice( void* pUserContext );
+bool CALLBACK IsD3D10DeviceAcceptable(UINT Adapter, UINT Output, D3D10_DRIVER_TYPE DeviceType,
+    DXGI_FORMAT BufferFormat, bool bWindowed, void* pUserContext);
+HRESULT CALLBACK OnD3D10CreateDevice(ID3D10Device* pd3dDevice, const DXGI_SURFACE_DESC* pBufferSurfaceDesc,
+    void* pUserContext);
+HRESULT CALLBACK OnD3D10ResizedSwapChain(ID3D10Device* pd3dDevice, IDXGISwapChain* pSwapChain,
+    const DXGI_SURFACE_DESC* pBufferSurfaceDesc, void* pUserContext);
+void CALLBACK OnD3D10FrameRender(ID3D10Device* pd3dDevice, double fTime, float fElapsedTime, void* pUserContext);
+void CALLBACK OnD3D10ReleasingSwapChain(void* pUserContext);
+void CALLBACK OnD3D10DestroyDevice(void* pUserContext);
 
-LRESULT CALLBACK MsgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool* pbNoFurtherProcessing,
-                          void* pUserContext );
-void CALLBACK OnKeyboard( UINT nChar, bool bKeyDown, bool bAltDown, void* pUserContext );
-void CALLBACK OnFrameMove( double fTime, float fElapsedTime, void* pUserContext );
-bool CALLBACK ModifyDeviceSettings( DXUTDeviceSettings* pDeviceSettings, void* pUserContext );
-void CALLBACK OnGUIEvent( UINT nEvent, int nControlID, CDXUTControl* pControl, void* pUserContext );
+LRESULT CALLBACK MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool* pbNoFurtherProcessing,
+    void* pUserContext);
+void CALLBACK OnKeyboard(UINT nChar, bool bKeyDown, bool bAltDown, void* pUserContext);
+void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext);
+bool CALLBACK ModifyDeviceSettings(DXUTDeviceSettings* pDeviceSettings, void* pUserContext);
+void CALLBACK OnGUIEvent(UINT nEvent, int nControlID, CDXUTControl* pControl, void* pUserContext);
 
 //! A function.
 /*!
@@ -143,63 +131,63 @@ void SetUI();
 */
 void StopDraw();
 
+
 //--------------------------------------------------------------------------------------
 // Initialize the app 
 //--------------------------------------------------------------------------------------
 void InitApp()
 {
-    g_D3DSettingsDlg.Init( &g_DialogResourceManager );
-    g_HUD.Init( &g_DialogResourceManager );
+    g_D3DSettingsDlg.Init(&g_DialogResourceManager);
+    g_HUD.Init(&g_DialogResourceManager);
 
-    g_HUD.SetCallback( OnGUIEvent ); 
-    
+    g_HUD.SetCallback(OnGUIEvent);
+
     ReadData();
-    SetUI();    
+    SetUI();
 }
-
 
 
 //--------------------------------------------------------------------------------------
 // Entry point to the program. Initializes everything and goes into a message processing 
 // loop. Idle time is used to render the scene.
 //--------------------------------------------------------------------------------------
-int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow )
+int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 {
     // Enable run-time memory check for debug builds.
 #if defined(DEBUG) | defined(_DEBUG)
-    _CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
     // DXUT will create and use the best device (either D3D9 or D3D10) 
     // that is available system depending on which D3D callbacks set below
 
     // Set DXUT callbacks
-    DXUTSetCallbackD3D10DeviceAcceptable( IsD3D10DeviceAcceptable );
-    DXUTSetCallbackD3D10DeviceCreated( OnD3D10CreateDevice );
-    DXUTSetCallbackD3D10SwapChainResized( OnD3D10ResizedSwapChain );
-    DXUTSetCallbackD3D10SwapChainReleasing( OnD3D10ReleasingSwapChain );
-    DXUTSetCallbackD3D10DeviceDestroyed( OnD3D10DestroyDevice );
-    DXUTSetCallbackD3D10FrameRender( OnD3D10FrameRender );
+    DXUTSetCallbackD3D10DeviceAcceptable(IsD3D10DeviceAcceptable);
+    DXUTSetCallbackD3D10DeviceCreated(OnD3D10CreateDevice);
+    DXUTSetCallbackD3D10SwapChainResized(OnD3D10ResizedSwapChain);
+    DXUTSetCallbackD3D10SwapChainReleasing(OnD3D10ReleasingSwapChain);
+    DXUTSetCallbackD3D10DeviceDestroyed(OnD3D10DestroyDevice);
+    DXUTSetCallbackD3D10FrameRender(OnD3D10FrameRender);
 
-    DXUTSetCallbackMsgProc( MsgProc );
-    DXUTSetCallbackKeyboard( OnKeyboard );
-    DXUTSetCallbackFrameMove( OnFrameMove );
-    DXUTSetCallbackDeviceChanging( ModifyDeviceSettings );
+    DXUTSetCallbackMsgProc(MsgProc);
+    DXUTSetCallbackKeyboard(OnKeyboard);
+    DXUTSetCallbackFrameMove(OnFrameMove);
+    DXUTSetCallbackDeviceChanging(ModifyDeviceSettings);
 
-    DXUTInit( true, true, NULL ); // Parse the command line, show msgboxes on error, no extra command line params
-    DXUTSetCursorSettings( true, true ); // Show the cursor and clip it when in full screen
+    DXUTInit(true, true, nullptr);      // Parse the command line, show msgboxes on error, no extra command line params
+    DXUTSetCursorSettings(true, true);  // Show the cursor and clip it when in full screen
 
-	InitApp();
+    InitApp();
 
 
 
     DXUTCreateWindow(CreateWindowTitle().c_str());
-    DXUTCreateDevice( true, 640, 480 );
+    DXUTCreateDevice(true, 640, 480);
 
-	DXUTDeviceSettings ds;
-	ds = DXUTGetDeviceSettings();
+    DXUTDeviceSettings ds;
+    ds = DXUTGetDeviceSettings();
 
-    DXUTMainLoop(); // Enter into the DXUT render loop
+    DXUTMainLoop();                     // Enter into the DXUT render loop
 
     return DXUTGetExitCode();
 }
@@ -208,8 +196,8 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdL
 //--------------------------------------------------------------------------------------
 // Reject any D3D10 devices that aren't acceptable by returning false
 //--------------------------------------------------------------------------------------
-bool CALLBACK IsD3D10DeviceAcceptable( UINT Adapter, UINT Output, D3D10_DRIVER_TYPE DeviceType,
-                                       DXGI_FORMAT BufferFormat, bool bWindowed, void* pUserContext )
+bool CALLBACK IsD3D10DeviceAcceptable(UINT Adapter, UINT Output, D3D10_DRIVER_TYPE DeviceType,
+    DXGI_FORMAT BufferFormat, bool bWindowed, void* pUserContext)
 {
     return true;
 }
@@ -218,28 +206,17 @@ bool CALLBACK IsD3D10DeviceAcceptable( UINT Adapter, UINT Output, D3D10_DRIVER_T
 //--------------------------------------------------------------------------------------
 // Create any D3D10 resources that aren't dependant on the back buffer
 //--------------------------------------------------------------------------------------
-HRESULT CALLBACK OnD3D10CreateDevice( ID3D10Device* pd3dDevice, const DXGI_SURFACE_DESC* pBufferSurfaceDesc,
-                                      void* pUserContext )
+HRESULT CALLBACK OnD3D10CreateDevice(ID3D10Device* pd3dDevice, const DXGI_SURFACE_DESC* pBufferSurfaceDesc,
+    void* pUserContext)
 {
-	HRESULT hr;
+    HRESULT hr;
 
-    V_RETURN( g_DialogResourceManager.OnD3D10CreateDevice( pd3dDevice ) );
-    V_RETURN( g_D3DSettingsDlg.OnD3D10CreateDevice( pd3dDevice ) );
-
-    ID3DX10Font * fonttemp;
-    V_RETURN( D3DX10CreateFont( pd3dDevice, 15, 0, FW_BOLD, 1, FALSE, DEFAULT_CHARSET,
-                                OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
-                                L"Arial", &fonttemp ) );
-    font.reset(fonttemp);
-
-    ID3DX10Sprite * spritetmp;
-    V_RETURN( D3DX10CreateSprite( pd3dDevice, 512, &spritetmp ) );
-    sprite.reset(spritetmp);
-    //g_pTxtHelper = new CDXUTTextHelper( NULL, NULL, g_pFont, g_pSprite, 15 );
+    V_RETURN(g_DialogResourceManager.OnD3D10CreateDevice(pd3dDevice));
+    V_RETURN(g_D3DSettingsDlg.OnD3D10CreateDevice(pd3dDevice));
     
     auto buf = _aligned_malloc(sizeof(TDXScene), 16);
-    scene.reset(new(buf) TDXScene(pgd));
-	return scene->Init(pd3dDevice);
+    scene.reset(new(buf)TDXScene(pgd));
+    return scene->Init(pd3dDevice);
 }
 
 
@@ -247,25 +224,25 @@ HRESULT CALLBACK OnD3D10CreateDevice( ID3D10Device* pd3dDevice, const DXGI_SURFA
 // Create any D3D10 resources that depend on the back buffer
 // Create and set the depth stencil texture if needed
 //--------------------------------------------------------------------------------------
-HRESULT CALLBACK OnD3D10ResizedSwapChain( ID3D10Device* pd3dDevice, IDXGISwapChain* pSwapChain,
-                                          const DXGI_SURFACE_DESC* pBufferSurfaceDesc, void* pUserContext )
+HRESULT CALLBACK OnD3D10ResizedSwapChain(ID3D10Device* pd3dDevice, IDXGISwapChain* pSwapChain,
+    const DXGI_SURFACE_DESC* pBufferSurfaceDesc, void* pUserContext)
 {
     HRESULT hr;
 
-    V_RETURN( g_DialogResourceManager.OnD3D10ResizedSwapChain( pd3dDevice, pBufferSurfaceDesc ) );
-    V_RETURN( g_D3DSettingsDlg.OnD3D10ResizedSwapChain( pd3dDevice, pBufferSurfaceDesc ) );
+    V_RETURN(g_DialogResourceManager.OnD3D10ResizedSwapChain(pd3dDevice, pBufferSurfaceDesc));
+    V_RETURN(g_D3DSettingsDlg.OnD3D10ResizedSwapChain(pd3dDevice, pBufferSurfaceDesc));
 
-    g_HUD.SetLocation( pBufferSurfaceDesc->Width - 170, 0 );
-    g_HUD.SetSize( 170, 170 );
+    g_HUD.SetLocation(pBufferSurfaceDesc->Width - 170, 0);
+    g_HUD.SetSize(170, 170);
 
 
-	return scene->OnResize(pd3dDevice, pSwapChain, pBufferSurfaceDesc, pUserContext);
+    return scene->OnResize(pd3dDevice, pSwapChain, pBufferSurfaceDesc, pUserContext);
 }
 
 //--------------------------------------------------------------------------------------
 // Render the help and statistics text
 //--------------------------------------------------------------------------------------
-void RenderText( double fTime)
+void RenderText(double fTime)
 {
 }
 
@@ -273,19 +250,19 @@ void RenderText( double fTime)
 //--------------------------------------------------------------------------------------
 // Render the scene using the D3D10 device
 //--------------------------------------------------------------------------------------
-void CALLBACK OnD3D10FrameRender( ID3D10Device* pd3dDevice, double fTime, float fElapsedTime, void* pUserContext )
+void CALLBACK OnD3D10FrameRender(ID3D10Device* pd3dDevice, double fTime, float fElapsedTime, void* pUserContext)
 {
-	if( g_D3DSettingsDlg.IsActive() )
+    if (g_D3DSettingsDlg.IsActive())
     {
-	    float ClearColor[4] = { 0.0f, 0.125f, 0.3f, 1.0f }; // red, green, blue, alpha
-		ID3D10RenderTargetView* pRTV = DXUTGetD3D10RenderTargetView();
-		pd3dDevice->ClearRenderTargetView( pRTV, ClearColor );
+        float ClearColor[4] = { 0.0f, 0.125f, 0.3f, 1.0f }; // red, green, blue, alpha
+        ID3D10RenderTargetView* pRTV = DXUTGetD3D10RenderTargetView();
+        pd3dDevice->ClearRenderTargetView(pRTV, ClearColor);
 
-        g_D3DSettingsDlg.OnRender( fElapsedTime );
+        g_D3DSettingsDlg.OnRender(fElapsedTime);
         return;
     }
-	else
-	{
+    else
+    {
         auto const index = drawdata & 0x0F;
         switch (pgd->L) {
         case 0:
@@ -336,7 +313,7 @@ void CALLBACK OnD3D10FrameRender( ID3D10Device* pd3dDevice, double fTime, float 
             case 5:
                 scene->RedrawFunc(0, pd3dDevice, reim);
                 break;
-                
+
             default:
                 BOOST_ASSERT(!"indexの指定がおかしい！");
                 break;
@@ -386,10 +363,11 @@ void CALLBACK OnD3D10FrameRender( ID3D10Device* pd3dDevice, double fTime, float 
             BOOST_ASSERT(!"量子数の指定が異常です！");
             break;
         }
-        
-        scene->OnRender( pd3dDevice, fTime, fElapsedTime, pUserContext );
-	    g_HUD.OnRender( fElapsedTime );
-	}
+
+        scene->OnRender(pd3dDevice, fTime, fElapsedTime, pUserContext);
+        g_HUD.OnRender(fElapsedTime);
+        RenderText(fTime);
+    }
 }
 
 
@@ -397,7 +375,7 @@ void CALLBACK OnD3D10FrameRender( ID3D10Device* pd3dDevice, double fTime, float 
 //--------------------------------------------------------------------------------------
 // Release D3D10 resources created in OnD3D10ResizedSwapChain 
 //--------------------------------------------------------------------------------------
-void CALLBACK OnD3D10ReleasingSwapChain( void* pUserContext )
+void CALLBACK OnD3D10ReleasingSwapChain(void* pUserContext)
 {
     g_DialogResourceManager.OnD3D10ReleasingSwapChain();
 }
@@ -406,7 +384,7 @@ void CALLBACK OnD3D10ReleasingSwapChain( void* pUserContext )
 //--------------------------------------------------------------------------------------
 // Release D3D10 resources created in OnD3D10CreateDevice 
 //--------------------------------------------------------------------------------------
-void CALLBACK OnD3D10DestroyDevice( void* pUserContext )
+void CALLBACK OnD3D10DestroyDevice(void* pUserContext)
 {
     StopDraw();
 
@@ -414,8 +392,6 @@ void CALLBACK OnD3D10DestroyDevice( void* pUserContext )
     g_D3DSettingsDlg.OnD3D10DestroyDevice();
     DXUTGetGlobalResourceCache().OnDestroyDevice();
 
-    font.reset();
-    sprite.reset();
     scene.reset();
 }
 
@@ -423,7 +399,7 @@ void CALLBACK OnD3D10DestroyDevice( void* pUserContext )
 //--------------------------------------------------------------------------------------
 // Called right before creating a D3D9 or D3D10 device, allowing the app to modify the device settings as needed
 //--------------------------------------------------------------------------------------
-bool CALLBACK ModifyDeviceSettings( DXUTDeviceSettings* pDeviceSettings, void* pUserContext )
+bool CALLBACK ModifyDeviceSettings(DXUTDeviceSettings* pDeviceSettings, void* pUserContext)
 {
     return true;
 }
@@ -432,38 +408,38 @@ bool CALLBACK ModifyDeviceSettings( DXUTDeviceSettings* pDeviceSettings, void* p
 //--------------------------------------------------------------------------------------
 // Handle updates to the scene.  This is called regardless of which D3D API is used
 //--------------------------------------------------------------------------------------
-void CALLBACK OnFrameMove( double fTime, float fElapsedTime, void* pUserContext )
+void CALLBACK OnFrameMove(double fTime, float fElapsedTime, void* pUserContext)
 {
-	if(ROT_FLAG)
-		scene->OnFrameMove(fTime, fElapsedTime, pUserContext );
+    if (ROT_FLAG)
+        scene->OnFrameMove(fTime, fElapsedTime, pUserContext);
 }
 
 
 //--------------------------------------------------------------------------------------
 // Handle messages to the application
 //--------------------------------------------------------------------------------------
-LRESULT CALLBACK MsgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool* pbNoFurtherProcessing,
-                          void* pUserContext )
+LRESULT CALLBACK MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bool* pbNoFurtherProcessing,
+    void* pUserContext)
 {
     // Pass messages to dialog resource manager calls so GUI state is updated correctly
-    *pbNoFurtherProcessing = g_DialogResourceManager.MsgProc( hWnd, uMsg, wParam, lParam );
-    if( *pbNoFurtherProcessing )
+    *pbNoFurtherProcessing = g_DialogResourceManager.MsgProc(hWnd, uMsg, wParam, lParam);
+    if (*pbNoFurtherProcessing)
         return 0;
 
     // Pass messages to settings dialog if its active
-    if( g_D3DSettingsDlg.IsActive() )
+    if (g_D3DSettingsDlg.IsActive())
     {
-        g_D3DSettingsDlg.MsgProc( hWnd, uMsg, wParam, lParam );
+        g_D3DSettingsDlg.MsgProc(hWnd, uMsg, wParam, lParam);
         return 0;
     }
 
     // Give the dialogs a chance to handle the message first
-    *pbNoFurtherProcessing = g_HUD.MsgProc( hWnd, uMsg, wParam, lParam );
-    if( *pbNoFurtherProcessing )
+    *pbNoFurtherProcessing = g_HUD.MsgProc(hWnd, uMsg, wParam, lParam);
+    if (*pbNoFurtherProcessing)
         return 0;
-
-	if(scene != NULL)
-		scene->MsgPrc( hWnd, uMsg, wParam, lParam );
+    
+    if (scene != nullptr)
+        scene->MsgPrc(hWnd, uMsg, wParam, lParam);
 
     return 0;
 }
@@ -472,14 +448,14 @@ LRESULT CALLBACK MsgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bo
 //--------------------------------------------------------------------------------------
 // Handle key presses
 //--------------------------------------------------------------------------------------
-void CALLBACK OnKeyboard( UINT nChar, bool bKeyDown, bool bAltDown, void* pUserContext )
+void CALLBACK OnKeyboard(UINT nChar, bool bKeyDown, bool bAltDown, void* pUserContext)
 {
-    if( bKeyDown )
+    if (bKeyDown)
     {
-        switch( nChar )
+        switch (nChar)
         {
-            case VK_F1: // Change as needed                
-                break;
+        case VK_F1: // Change as needed                
+            break;
         }
     }
 }
@@ -488,55 +464,55 @@ void CALLBACK OnKeyboard( UINT nChar, bool bKeyDown, bool bAltDown, void* pUserC
 //--------------------------------------------------------------------------------------
 // Handles the GUI events
 //--------------------------------------------------------------------------------------
-void CALLBACK OnGUIEvent( UINT nEvent, int nControlID, CDXUTControl* pControl, void* pUserContext )
+void CALLBACK OnGUIEvent(UINT nEvent, int nControlID, CDXUTControl* pControl, void* pUserContext)
 {
-    switch (nControlID )
+    switch (nControlID)
     {
-        case IDC_TOGGLEFULLSCREEN:
-            DXUTToggleFullScreen();
-            break;
+    case IDC_TOGGLEFULLSCREEN:
+        DXUTToggleFullScreen();
+        break;
 
-        case IDC_CHANGEDEVICE:
-            g_D3DSettingsDlg.SetActive( !g_D3DSettingsDlg.IsActive() );
-            break;
+    case IDC_CHANGEDEVICE:
+        g_D3DSettingsDlg.SetActive(!g_D3DSettingsDlg.IsActive());
+        break;
 
-		case IDC_TOGGLEROTATION:
-			ROT_FLAG = !ROT_FLAG;
-            break;
+    case IDC_TOGGLEROTATION:
+        ROT_FLAG = !ROT_FLAG;
+        break;
 
-        case IDC_READDATA:
-            StopDraw();
-            ReadData();
-            SetUI();
-            scene->Pgd = pgd;
-            scene->Thread_end = false;
-            scene->Redraw = true;
-            ::SetWindowText(DXUTGetHWND(), CreateWindowTitle().c_str());
-            break;
+    case IDC_READDATA:
+        StopDraw();
+        ReadData();
+        SetUI();
+        scene->Pgd = pgd;
+        scene->Thread_end = false;
+        scene->Redraw = true;
+        ::SetWindowText(DXUTGetHWND(), CreateWindowTitle().c_str());
+        break;
 
-        case IDC_COMBOBOX:
+    case IDC_COMBOBOX:
+    {
+        auto const pItem = (static_cast<CDXUTComboBox *>(pControl))->GetSelectedItem();
+        if (pItem)
         {
-            auto const pItem = (static_cast<CDXUTComboBox *>(pControl))->GetSelectedItem();
-            if (pItem)
-            {
-                drawdata = reinterpret_cast<std::uint32_t>(pItem->pData);
-                RedrawFlagTrue();
-            }
-            break;
+            drawdata = reinterpret_cast<std::uint32_t>(pItem->pData);
+            RedrawFlagTrue();
         }
+        break;
+    }
 
-        case IDC_RADIOA:
-            reim = TDXScene::Re_Im_type::REAL;
-            RedrawFlagTrue();
-            break;
+    case IDC_RADIOA:
+        reim = TDXScene::Re_Im_type::REAL;
+        RedrawFlagTrue();
+        break;
 
-        case IDC_RADIOB:
-            reim = TDXScene::Re_Im_type::IMAGINARY;
-            RedrawFlagTrue();
-            break;
+    case IDC_RADIOB:
+        reim = TDXScene::Re_Im_type::IMAGINARY;
+        RedrawFlagTrue();
+        break;
 
-        default:
-            break;
+    default:
+        break;
     }
 }
 

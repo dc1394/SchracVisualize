@@ -153,6 +153,8 @@ namespace tdxscene {
         */
         static std::size_t const N = 500000;
 
+        D3D10_BUFFER_DESC bd;
+
         //! A private member variable.
         /*!
             A model viewing camera
@@ -166,6 +168,8 @@ namespace tdxscene {
             エフェクト＝シェーダプログラムを読ませるところ
         */
         std::unique_ptr<ID3D10Effect, utility::Safe_Release<ID3D10Effect>> effect;
+
+        D3D10_SUBRESOURCE_DATA InitData;
 
         D3DXVECTOR4							lightDir;
 
