@@ -215,9 +215,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     auto const ypos = (dispy - WINDOWHEIGHT) >> 1;
     DXUTCreateWindow(CreateWindowTitle().c_str(), nullptr, nullptr, nullptr, xpos, ypos);
     DXUTCreateDevice(true, WINDOWWIDTH, WINDOWHEIGHT);
-
-    DXUTDeviceSettings ds;
-    ds = DXUTGetDeviceSettings();
+    
+    auto ds = DXUTGetDeviceSettings();
+    ds.d3d10.SyncInterval = 0;
+    DXUTCreateDeviceFromSettings(&ds);
 
     DXUTMainLoop();                     // Enter into the DXUT render loop
 
