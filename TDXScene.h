@@ -167,7 +167,11 @@ namespace tdxscene {
         */
         static std::size_t const N = 500000;
 
-        D3D10_BUFFER_DESC bd;
+        //! A private member variable.
+        /*!
+            バッファー リソース
+        */
+        D3D10_BUFFER_DESC bd_;
 
         //! A private member variable.
         /*!
@@ -211,9 +215,13 @@ namespace tdxscene {
         /*!
             描画するrの最大値
         */
-        double rmax;
+        double rmax_;
 
-        ID3D10EffectTechnique*              technique;
+        //! A private member variable.
+        /*!
+            テクニック情報
+        */
+        ID3D10EffectTechnique * technique_;
 
         //! A private member variable.
         /*!
@@ -221,11 +229,17 @@ namespace tdxscene {
         */
         bool thread_end_ = false;
 
-        ID3D10ShaderResourceView * textureRV;
-
-        std::unique_ptr<ID3D10Buffer, utility::Safe_Release<ID3D10Buffer>> vertexBuffer;
-
-        std::shared_ptr<ID3D10InputLayout> vertexLayout;
+        //! A private member variable.
+        /*!
+            頂点バッファ
+        */
+        std::unique_ptr<ID3D10Buffer, utility::Safe_Release<ID3D10Buffer>> vertexBuffer_;
+        
+        //! A private member variable.
+        /*!
+            入力レイアウト インターフェイス
+        */
+        std::shared_ptr<ID3D10InputLayout> vertexLayout_;
 
         //! A private member variable.
         /*!

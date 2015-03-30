@@ -23,18 +23,17 @@ namespace tdxscene {
     TDXScene::TDXScene(std::shared_ptr<getdata::GetData> const & pgd) :
         Pth([this]{ return pth_; }, nullptr),
         Pgd(nullptr, [this](std::shared_ptr<getdata::GetData> const & val) {
-        rmax = GetRmax(val);
+        rmax_ = GetRmax(val);
         SetCamera();
         return pgd_ = val;
     }),
-        PvertexLayout([this]{ return vertexLayout; }, nullptr),
+        PvertexLayout([this]{ return vertexLayout_; }, nullptr),
         Redraw(nullptr, [this](bool redraw){ return redraw_ = redraw; }),
         Thread_end(nullptr, [this](bool thread_end){ return RewriteWithLock(thread_end_, thread_end); }),
         projectionVariable(nullptr),
         pgd_(pgd),
-        rmax(GetRmax(pgd)),
-        technique(nullptr),
-        textureRV(nullptr),
+        rmax_(GetRmax(pgd)),
+        technique_(nullptr),
         vertices_(N),
         viewVariable(nullptr),
         worldVariable(nullptr)
@@ -83,7 +82,7 @@ namespace tdxscene {
             }
         }
 
-        technique = effect->GetTechniqueByName("Render2");
+        technique_ = effect->GetTechniqueByName("Render2");
         worldVariable = effect->GetVariableByName("World")->AsMatrix();
         viewVariable = effect->GetVariableByName("View")->AsMatrix();
         projectionVariable = effect->GetVariableByName("Projection")->AsMatrix();
@@ -99,7 +98,7 @@ namespace tdxscene {
 
         // Create the input layout
         D3D10_PASS_DESC PassDesc;
-        technique->GetPassByIndex(0)->GetDesc(&PassDesc);
+        technique_->GetPassByIndex(0)->GetDesc(&PassDesc);
         ID3D10InputLayout * pVertexLayout;
 
         if (!utility::v_return(
@@ -112,16 +111,16 @@ namespace tdxscene {
             return S_FALSE;
         }
 
-        vertexLayout.reset(pVertexLayout, utility::Safe_Release<ID3D10InputLayout>());
+        vertexLayout_.reset(pVertexLayout, utility::Safe_Release<ID3D10InputLayout>());
 
         // Set the input layout
-        pd3dDevice->IASetInputLayout(vertexLayout.get());
+        pd3dDevice->IASetInputLayout(vertexLayout_.get());
                 
-        bd.Usage = D3D10_USAGE_DEFAULT;
-        bd.ByteWidth = sizeof(SimpleVertex2) * N;
-        bd.BindFlags = D3D10_BIND_VERTEX_BUFFER;
-        bd.CPUAccessFlags = 0;
-        bd.MiscFlags = 0;
+        bd_.Usage = D3D10_USAGE_DEFAULT;
+        bd_.ByteWidth = sizeof(SimpleVertex2) * N;
+        bd_.BindFlags = D3D10_BIND_VERTEX_BUFFER;
+        bd_.CPUAccessFlags = 0;
+        bd_.MiscFlags = 0;
                 
         // Initialize the world matrices
         D3DXMatrixIdentity(&world);
@@ -177,10 +176,10 @@ namespace tdxscene {
         // Render the cube
         //
         D3D10_TECHNIQUE_DESC techDesc;
-        technique->GetDesc(&techDesc);
+        technique_->GetDesc(&techDesc);
         for (auto p = 0U; p < techDesc.Passes; ++p)
         {
-            technique->GetPassByIndex(p)->Apply(0);
+            technique_->GetPassByIndex(p)->Apply(0);
             pd3dDevice->Draw(N, 0);
         }
 
@@ -222,7 +221,7 @@ namespace tdxscene {
         InitData.pSysMem = vertices_.data();
 
         ID3D10Buffer * vertexBuffertmp;
-        if (!utility::v_return(pd3dDevice->CreateBuffer(&bd, &InitData, &vertexBuffertmp))) {
+        if (!utility::v_return(pd3dDevice->CreateBuffer(&bd_, &InitData, &vertexBuffertmp))) {
             return S_FALSE;
         }
 
@@ -230,7 +229,7 @@ namespace tdxscene {
         static auto const stride = static_cast<UINT>(sizeof(SimpleVertex2));
         static auto const offset = 0U;
         pd3dDevice->IASetVertexBuffers(0, 1, &vertexBuffertmp, &stride, &offset);
-        vertexBuffer.reset(vertexBuffertmp);
+        vertexBuffer_.reset(vertexBuffertmp);
 
         return S_OK;
     }
@@ -264,7 +263,7 @@ namespace tdxscene {
         auto sign = 0;
         double x, y, z;
 
-        myrandom::MyRand mr(-rmax, rmax);
+        myrandom::MyRand mr(-rmax_, rmax_);
         myrandom::MyRand mr2(pgd_->Funcmin, pgd_->Funcmax);
 
         do {
@@ -308,7 +307,7 @@ namespace tdxscene {
                     break;
                 }
 
-                pp = (*pgd_)(r)* ylm;
+                pp = (*pgd_)(r) * ylm;
             }
             break;
 
@@ -338,7 +337,7 @@ namespace tdxscene {
     void TDXScene::SetCamera()
     {
         // Initialize the view matrix
-        auto const pos = static_cast<float>(rmax)* 1.2f;
+        auto const pos = static_cast<float>(rmax_) * 1.2f;
         D3DXVECTOR3 Eye(0.0f, pos, -pos);
         D3DXVECTOR3 At(0.0f, 0.0f, 0.0f);
         camera.SetViewParams(&Eye, &At);
