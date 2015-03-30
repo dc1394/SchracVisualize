@@ -38,11 +38,29 @@ CDXUTDialog                         g_HUD;                      // manages the 3
 
 bool	ROT_FLAG = true;
 
+//! A global variable (constant).
+/*!
+    画面サイズ（高さ）
+*/
+static auto const WINDOWHEIGHT = 960;
+
+//! A global variable (constant).
+/*!
+    画面サイズ（幅）
+*/
+static auto const WINDOWWIDTH = 1280;
+
 //! A global variable.
 /*!
     描画する軌道の識別数値
 */
 auto drawdata = 1U;
+
+//! A global variable.
+/*!
+    Font for drawing text
+*/
+std::unique_ptr<ID3DX10Font, utility::Safe_Release<ID3DX10Font>> font;
 
 //! A global variable.
 /*!
@@ -58,6 +76,14 @@ std::unique_ptr<TDXScene, decltype(aligned_deleter)> scene;
 
 //! A global variable.
 /*!
+    Sprite for batching text drawing
+*/
+std::unique_ptr<ID3DX10Sprite, utility::Safe_Release<ID3DX10Sprite>> sprite;
+
+std::unique_ptr<CDXUTTextHelper, utility::Safe_Delete<CDXUTTextHelper>> txthelper;
+
+//! A global variable.
+/*!
     再描画するかどうか
 */
 auto redraw = true;
@@ -67,7 +93,6 @@ auto redraw = true;
     実部と虚部のどちらを描画するか
 */
 auto reim = TDXScene::Re_Im_type::REAL;
-
 
 //--------------------------------------------------------------------------------------
 // UI control IDs
@@ -121,6 +146,12 @@ void RedrawFlagTrue();
 
 //! A function.
 /*!
+    画面の左上に情報を表示する
+*/
+void RenderText();
+
+//! A function.
+/*!
     UIを配置する
 */
 void SetUI();
@@ -130,7 +161,6 @@ void SetUI();
     描画を中止する
 */
 void StopDraw();
-
 
 //--------------------------------------------------------------------------------------
 // Initialize the app 
@@ -178,11 +208,13 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     DXUTSetCursorSettings(true, true);  // Show the cursor and clip it when in full screen
 
     InitApp();
-
-
-
-    DXUTCreateWindow(CreateWindowTitle().c_str());
-    DXUTCreateDevice(true, 640, 480);
+    
+    auto const dispx = ::GetSystemMetrics(SM_CXSCREEN);
+    auto const dispy = ::GetSystemMetrics(SM_CYSCREEN);
+    auto const xpos = (dispx - WINDOWWIDTH) >> 1;
+    auto const ypos = (dispy - WINDOWHEIGHT) >> 1;
+    DXUTCreateWindow(CreateWindowTitle().c_str(), nullptr, nullptr, nullptr, xpos, ypos);
+    DXUTCreateDevice(true, WINDOWWIDTH, WINDOWHEIGHT);
 
     DXUTDeviceSettings ds;
     ds = DXUTGetDeviceSettings();
@@ -214,6 +246,17 @@ HRESULT CALLBACK OnD3D10CreateDevice(ID3D10Device* pd3dDevice, const DXGI_SURFAC
     V_RETURN(g_DialogResourceManager.OnD3D10CreateDevice(pd3dDevice));
     V_RETURN(g_D3DSettingsDlg.OnD3D10CreateDevice(pd3dDevice));
     
+    ID3DX10Font * fonttemp;
+    V_RETURN(D3DX10CreateFont(pd3dDevice, 15, 0, FW_BOLD, 1, FALSE, DEFAULT_CHARSET,
+        OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
+        L"Arial", &fonttemp));
+    font.reset(fonttemp);
+
+    ID3DX10Sprite * spritetmp;
+    V_RETURN(D3DX10CreateSprite(pd3dDevice, 512, &spritetmp));
+    sprite.reset(spritetmp);
+    txthelper.reset(new CDXUTTextHelper( nullptr, nullptr, font.get(), sprite.get(), 15 ));
+
     auto buf = _aligned_malloc(sizeof(TDXScene), 16);
     scene.reset(new(buf)TDXScene(pgd));
     return scene->Init(pd3dDevice);
@@ -234,16 +277,29 @@ HRESULT CALLBACK OnD3D10ResizedSwapChain(ID3D10Device* pd3dDevice, IDXGISwapChai
 
     g_HUD.SetLocation(pBufferSurfaceDesc->Width - 170, 0);
     g_HUD.SetSize(170, 170);
-
-
+    
     return scene->OnResize(pd3dDevice, pSwapChain, pBufferSurfaceDesc, pUserContext);
 }
 
 //--------------------------------------------------------------------------------------
 // Render the help and statistics text
 //--------------------------------------------------------------------------------------
-void RenderText(double fTime)
+void RenderText(ID3D10Device* pd3dDevice, double fTime)
 {
+    char buf[1000];
+    WCHAR	wbuf[1000];
+    memset(wbuf, 0, sizeof(wbuf));
+    txthelper->Begin();
+    txthelper->SetInsertionPos(2, 0);
+    txthelper->SetForegroundColor(D3DXCOLOR(1.0f, 1.0f, 0.0f, 1.0f));
+    sprintf_s(buf, "time = %f", fTime);
+    std::locale::global(std::locale("japanese"));
+    MultiByteToWideChar(CP_ACP, 0, buf, strlen(buf), wbuf, sizeof(wbuf));
+    txthelper->DrawTextLine(DXUTGetFrameStats(DXUTIsVsyncEnabled()));
+    txthelper->DrawTextLine(DXUTGetDeviceStats());
+    txthelper->DrawTextLine(wbuf);
+    txthelper->End();
+    pd3dDevice->IASetInputLayout(scene->PvertexLayout().get());
 }
 
 
@@ -366,7 +422,7 @@ void CALLBACK OnD3D10FrameRender(ID3D10Device* pd3dDevice, double fTime, float f
 
         scene->OnRender(pd3dDevice, fTime, fElapsedTime, pUserContext);
         g_HUD.OnRender(fElapsedTime);
-        RenderText(fTime);
+        RenderText(pd3dDevice, fTime);
     }
 }
 
@@ -386,12 +442,18 @@ void CALLBACK OnD3D10ReleasingSwapChain(void* pUserContext)
 //--------------------------------------------------------------------------------------
 void CALLBACK OnD3D10DestroyDevice(void* pUserContext)
 {
-    StopDraw();
+    scene->Thread_end = true;
+    if (scene->Pth()->joinable()) {
+        scene->Pth()->detach();
+    }
 
     g_DialogResourceManager.OnD3D10DestroyDevice();
     g_D3DSettingsDlg.OnD3D10DestroyDevice();
     DXUTGetGlobalResourceCache().OnDestroyDevice();
 
+    font.reset();
+    sprite.reset();
+    txthelper.reset();
     scene.reset();
 }
 

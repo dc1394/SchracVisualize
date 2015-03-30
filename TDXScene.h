@@ -71,8 +71,16 @@ namespace tdxscene {
 
         // #region メンバ関数
 
+        //! A public member function.
+        /*!
+            Direct3Dデバイスを初期化する
+            \param Direct3Dデバイスへのポインタ
+            \return 初期化が成功したかどうか
+        */
         HRESULT Init(ID3D10Device* pd3dDevice);
-        HRESULT MsgPrc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+        LRESULT MsgPrc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+        
         HRESULT OnFrameMove(double fTime, float fElapsedTime, void* pUserContext);
         HRESULT OnRender(ID3D10Device* pd3dDevice, double fTime, float fElapsedTime, void* pUserContext);
         HRESULT OnResize(ID3D10Device* pd3dDevice, IDXGISwapChain* pSwapChain,
@@ -132,6 +140,12 @@ namespace tdxscene {
 
         //! A property.
         /*!
+            VertexLayoutのスマートポインタのプロパティ
+        */
+        utility::Property<std::shared_ptr<ID3D10InputLayout>> PvertexLayout;
+
+        //! A property.
+        /*!
             再描画するかどうか
         */
         utility::Property<bool> Redraw;
@@ -161,28 +175,12 @@ namespace tdxscene {
         */
         CModelViewerCamera                  camera;
 
-        ID3D10EffectShaderResourceVariable* diffuseVariable;
-
         //! A private member variable.
         /*!
             エフェクト＝シェーダプログラムを読ませるところ
         */
         std::unique_ptr<ID3D10Effect, utility::Safe_Release<ID3D10Effect>> effect;
-
-        D3D10_SUBRESOURCE_DATA InitData;
-
-        D3DXVECTOR4							lightDir;
-
-        ID3D10EffectVectorVariable*		    lightDirVariable;
-
-        //! A private member variable.
-        /*!
-            メッシュの色
-        */
-        D3DXVECTOR4                         meshColor;
-
-        ID3D10EffectVectorVariable*         meshColorVariable;
-
+        
         //! A private member variable.
         /*!
             射影行列
@@ -227,7 +225,7 @@ namespace tdxscene {
 
         std::unique_ptr<ID3D10Buffer, utility::Safe_Release<ID3D10Buffer>> vertexBuffer;
 
-        std::unique_ptr<ID3D10InputLayout, utility::Safe_Release<ID3D10InputLayout>> vertexLayout;
+        std::shared_ptr<ID3D10InputLayout> vertexLayout;
 
         //! A private member variable.
         /*!

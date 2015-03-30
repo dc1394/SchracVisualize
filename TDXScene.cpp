@@ -27,11 +27,9 @@ namespace tdxscene {
         SetCamera();
         return pgd_ = val;
     }),
+        PvertexLayout([this]{ return vertexLayout; }, nullptr),
         Redraw(nullptr, [this](bool redraw){ return redraw_ = redraw; }),
         Thread_end(nullptr, [this](bool thread_end){ return RewriteWithLock(thread_end_, thread_end); }),
-        lightDirVariable(nullptr),
-        meshColor(0.7f, 0.7f, 0.7f, 1.0f),
-        meshColorVariable(nullptr),
         projectionVariable(nullptr),
         pgd_(pgd),
         rmax(GetRmax(pgd)),
@@ -89,8 +87,6 @@ namespace tdxscene {
         worldVariable = effect->GetVariableByName("World")->AsMatrix();
         viewVariable = effect->GetVariableByName("View")->AsMatrix();
         projectionVariable = effect->GetVariableByName("Projection")->AsMatrix();
-        meshColorVariable = effect->GetVariableByName("vMeshColor")->AsVector();
-        diffuseVariable = effect->GetVariableByName("txDiffuse")->AsShaderResource();
 
         // Define the input layout
         D3D10_INPUT_ELEMENT_DESC layout[] =
@@ -116,7 +112,7 @@ namespace tdxscene {
             return S_FALSE;
         }
 
-        vertexLayout.reset(pVertexLayout);
+        vertexLayout.reset(pVertexLayout, utility::Safe_Release<ID3D10InputLayout>());
 
         // Set the input layout
         pd3dDevice->IASetInputLayout(vertexLayout.get());
@@ -127,12 +123,6 @@ namespace tdxscene {
         bd.CPUAccessFlags = 0;
         bd.MiscFlags = 0;
                 
-        // Set primitive topology
-        pd3dDevice->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_POINTLIST);
-
-        // Load the Texture
-        hr = D3DX10CreateShaderResourceViewFromFile(pd3dDevice, L"seafloor.dds", nullptr, nullptr, &textureRV, nullptr);
-
         // Initialize the world matrices
         D3DXMatrixIdentity(&world);
 
@@ -143,9 +133,9 @@ namespace tdxscene {
     }
 
 
-    HRESULT TDXScene::MsgPrc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+    LRESULT TDXScene::MsgPrc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
-        return boost::numeric_cast<HRESULT>(camera.HandleMessages(hWnd, uMsg, wParam, lParam));
+        return camera.HandleMessages(hWnd, uMsg, wParam, lParam);
     }
 
 
@@ -153,11 +143,6 @@ namespace tdxscene {
     {
         // Update the camera's position based on user input 
         camera.FrameMove(fElapsedTime);
-
-        // Modify the color
-        meshColor.x = (std::sinf(static_cast<float>(fTime)* 1.0f) + 1.0f) * 0.5f;
-        meshColor.y = (std::cosf(static_cast<float>(fTime)* 3.0f) + 1.0f) * 0.5f;
-        meshColor.z = (std::sinf(static_cast<float>(fTime)* 5.0f) + 1.0f) * 0.5f;
 
         return S_OK;
     }
@@ -187,8 +172,6 @@ namespace tdxscene {
         viewVariable->SetMatrix(reinterpret_cast<float *>(const_cast<D3DXMATRIX *>(mat)));
 
         worldVariable->SetMatrix(reinterpret_cast<float *>(&world));
-
-        meshColorVariable->SetFloatVector(static_cast<float *>(meshColor));
 
         //
         // Render the cube
@@ -234,8 +217,8 @@ namespace tdxscene {
             });
             redraw_ = false;
         }
-
-                
+        
+        static D3D10_SUBRESOURCE_DATA InitData;
         InitData.pSysMem = vertices_.data();
 
         ID3D10Buffer * vertexBuffertmp;
@@ -244,8 +227,8 @@ namespace tdxscene {
         }
 
         // Set vertex buffer
-        UINT stride = static_cast<UINT>(sizeof(SimpleVertex2));
-        UINT offset = 0;
+        static auto const stride = static_cast<UINT>(sizeof(SimpleVertex2));
+        static auto const offset = 0U;
         pd3dDevice->IASetVertexBuffers(0, 1, &vertexBuffertmp, &stride, &offset);
         vertexBuffer.reset(vertexBuffertmp);
 
@@ -277,13 +260,14 @@ namespace tdxscene {
             return;
         }
 
+        auto pp = 0.0;
         auto sign = 0;
         double x, y, z;
 
         myrandom::MyRand mr(-rmax, rmax);
         myrandom::MyRand mr2(pgd_->Funcmin, pgd_->Funcmax);
 
-        while (true) {
+        do {
             if (thread_end_) {
                 return;
             }
@@ -297,7 +281,6 @@ namespace tdxscene {
                 continue;
             }
 
-            auto pp = 0.0;
             switch (pgd_->Rho_wf_type_) {
             case getdata::GetData::Rho_Wf_type::RHO:
             {
@@ -336,11 +319,10 @@ namespace tdxscene {
 
             sign = (pp > 0.0) - (pp < 0.0);
 
-            if ((std::fabs(pp) >= std::fabs(mr2.myrand())) ||
-                (!m && pgd_->Rho_wf_type_ == getdata::GetData::Rho_Wf_type::WF && reim == TDXScene::Re_Im_type::IMAGINARY)) {
+            if (!m && pgd_->Rho_wf_type_ == getdata::GetData::Rho_Wf_type::WF && reim == TDXScene::Re_Im_type::IMAGINARY) {
                 break;
             }
-        }
+        } while (std::fabs(pp) < std::fabs(mr2.myrand()));
 
         ver.Pos.x = static_cast<float>(x);
         ver.Pos.y = static_cast<float>(y);
@@ -352,6 +334,7 @@ namespace tdxscene {
         ver.Col.a = 1.0f;
     }
 
+
     void TDXScene::SetCamera()
     {
         // Initialize the view matrix
@@ -360,13 +343,14 @@ namespace tdxscene {
         D3DXVECTOR3 At(0.0f, 0.0f, 0.0f);
         camera.SetViewParams(&Eye, &At);
     }
-
+    
 
     double GetRmax(std::shared_ptr<getdata::GetData> const & pgd)
     {
         auto const n = static_cast<double>(pgd->N);
         return (2.3622 * n + 3.3340) * n + 1.3228;
     }
+
 
     bool RewriteWithLock(bool & dest, bool source)
     {
