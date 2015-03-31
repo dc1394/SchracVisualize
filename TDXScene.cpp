@@ -1,8 +1,8 @@
 ﻿/*! \file tdxscene.h
-\brief TDXSceneクラスの実装
+    \brief TDXSceneクラスの実装
 
-Copyright ©  2015 @dc1394 All Rights Reserved.
-This software is released under the BSD-2 License.
+    Copyright ©  2015 @dc1394 All Rights Reserved.
+    This software is released under the BSD-2 License.
 */
 
 #include "DXUT.h"
@@ -31,7 +31,7 @@ namespace tdxscene {
         PvertexLayout([this]{ return vertexLayout_; }, nullptr),
         Redraw(nullptr, [this](bool redraw){ return redraw_ = redraw; }),
         Thread_end(nullptr, [this](bool thread_end){ return RewriteWithLock(thread_end_, thread_end); }),
-        Vertexsize(nullptr, [this](std::vector<SimpleVertex2>::size_type size) { return RewriteWithLock(vertexsize_, size); }),
+        Vertexsize([this]{ return vertexsize_; }, [this](std::vector<SimpleVertex2>::size_type size) { return RewriteWithLock(vertexsize_, size); }),
         projectionVariable_(nullptr),
         pgd_(pgd),
         rmax_(GetRmax(pgd)),
@@ -205,7 +205,10 @@ namespace tdxscene {
     HRESULT TDXScene::RedrawFunc(std::int32_t m, ID3D10Device * pd3dDevice, TDXScene::Re_Im_type reim)
     {
         if (redraw_) {
-            vertices_.resize(vertexsize_);
+            if (vertices_.size() != vertexsize_) {
+                vertices_.resize(vertexsize_);
+            }
+
             pth_.reset(new std::thread([this, m, reim]{ ClearFillSimpleVertex2(m, reim); }), [this](std::thread * pth)
             {
                 if (pth->joinable()) {

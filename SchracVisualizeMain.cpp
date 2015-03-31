@@ -1,9 +1,9 @@
 ﻿/*! \file SchracVisualizeMain.cpp
-\brief メインファイル
+    \brief メインファイル
 
-Copyright ©  2015 @dc1394 All Rights Reserved.
-(but this is originally adapted by Microsoft Corporation for Basic introduction to DXUT)
-This software is released under the BSD-2 License.
+    Copyright ©  2015 @dc1394 All Rights Reserved.
+    (but this is originally adapted by Microsoft Corporation for Basic introduction to DXUT)
+    This software is released under the BSD-2 License.
 */
 
 #include "DXUT.h"
@@ -13,9 +13,10 @@ This software is released under the BSD-2 License.
 #include "SDKmisc.h"
 #include "TDXScene.h"
 #include "resource.h"
-#include <string>               // for std::wstring, std::to_string
-#include <malloc.h>             // for _aligned_malloc, _aligned_free
-#include <boost/format.hpp>     // for boost::wformat
+#include <string>                       // for std::wstring, std::to_string
+#include <malloc.h>                     // for _aligned_malloc, _aligned_free
+#include <boost/format.hpp>             // for boost::wformat
+#include <tbb/task_scheduler_init.h>    // for tbb::task_scheduler_init
 
 using namespace tdxscene;
 
@@ -50,6 +51,12 @@ static auto const WINDOWHEIGHT = 960;
     画面サイズ（幅）
 */
 static auto const WINDOWWIDTH = 1280;
+
+//! A global variable.
+/*!
+    CPUのスレッド数
+*/
+auto const cputhread = tbb::task_scheduler_init::default_num_threads();
 
 //! A global variable.
 /*!
@@ -336,12 +343,14 @@ void RenderText(ID3D10Device* pd3dDevice, double fTime)
     else {
         str = (boost::wformat(L"計算時間 = %.3f秒") % (fTime - drawstarttime)).str();
     }
-
+    
     txthelper->Begin();
     txthelper->SetInsertionPos(2, 0);
     txthelper->SetForegroundColor(D3DXCOLOR(1.000f, 0.945f, 0.059f, 1.000f));
     txthelper->DrawTextLine(DXUTGetFrameStats(DXUTIsVsyncEnabled()));
     txthelper->DrawTextLine(DXUTGetDeviceStats());
+    txthelper->DrawTextLine((boost::wformat(L"CPUスレッド数: %d") % cputhread).str().c_str());
+    txthelper->DrawTextLine((boost::wformat(L"頂点数 = %d") % scene->Vertexsize()).str().c_str());
     txthelper->DrawTextLine(str.c_str());
     txthelper->End();
     pd3dDevice->IASetInputLayout(scene->PvertexLayout().get());
@@ -356,7 +365,7 @@ void CALLBACK OnD3D10FrameRender(ID3D10Device* pd3dDevice, double fTime, float f
     if (g_D3DSettingsDlg.IsActive())
     {
         float ClearColor[4] = { 0.0f, 0.125f, 0.3f, 1.0f }; // red, green, blue, alpha
-        ID3D10RenderTargetView* pRTV = DXUTGetD3D10RenderTargetView();
+        auto pRTV = DXUTGetD3D10RenderTargetView();
         pd3dDevice->ClearRenderTargetView(pRTV, ClearColor);
 
         g_D3DSettingsDlg.OnRender(fElapsedTime);
