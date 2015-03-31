@@ -21,29 +21,31 @@ This software is released under the BSD-2 License.
 
 namespace tdxscene {
     TDXScene::TDXScene(std::shared_ptr<getdata::GetData> const & pgd) :
+        Complete([this]{ return complete_; }, nullptr),
         Pth([this]{ return pth_; }, nullptr),
         Pgd(nullptr, [this](std::shared_ptr<getdata::GetData> const & val) {
-        rmax_ = GetRmax(val);
-        SetCamera();
-        return pgd_ = val;
-    }),
+            rmax_ = GetRmax(val);
+            SetCamera();
+            return pgd_ = val;
+        }),
         PvertexLayout([this]{ return vertexLayout_; }, nullptr),
         Redraw(nullptr, [this](bool redraw){ return redraw_ = redraw; }),
         Thread_end(nullptr, [this](bool thread_end){ return RewriteWithLock(thread_end_, thread_end); }),
-        projectionVariable(nullptr),
+        Vertexsize(nullptr, [this](std::vector<SimpleVertex2>::size_type size) { return RewriteWithLock(vertexsize_, size); }),
+        projectionVariable_(nullptr),
         pgd_(pgd),
         rmax_(GetRmax(pgd)),
         technique_(nullptr),
-        vertices_(N),
-        viewVariable(nullptr),
-        worldVariable(nullptr)
+        vertices_(VERTEXSIZE_FIRST),
+        viewVariable_(nullptr),
+        worldVariable_(nullptr)
     {
     }
 
 
     HRESULT TDXScene::Init(ID3D10Device* pd3dDevice)
     {
-        // Read the D3DX effect file
+        // Read the D3DX effect_ file
         auto dwShaderFlags = D3D10_SHADER_ENABLE_STRICTNESS;
 #if defined( DEBUG ) || defined( _DEBUG )
         // Set the D3D10_SHADER_DEBUG flag to embed debug information in the shaders.
@@ -53,7 +55,7 @@ namespace tdxscene {
         dwShaderFlags |= D3D10_SHADER_DEBUG;
 #endif
 
-        ID3D10Effect * effecttmp;
+        ID3D10Effect * effect_tmp;
 
         auto hr = D3DX10CreateEffectFromFile(
             L"SchracVisualize.fx",
@@ -65,11 +67,11 @@ namespace tdxscene {
             pd3dDevice,
             nullptr,
             nullptr,
-            &effecttmp,
+            &effect_tmp,
             nullptr,
             nullptr);
 
-        effect.reset(effecttmp);
+        effect_.reset(effect_tmp);
 
         if (FAILED(hr))
         {
@@ -82,10 +84,10 @@ namespace tdxscene {
             }
         }
 
-        technique_ = effect->GetTechniqueByName("Render2");
-        worldVariable = effect->GetVariableByName("World")->AsMatrix();
-        viewVariable = effect->GetVariableByName("View")->AsMatrix();
-        projectionVariable = effect->GetVariableByName("Projection")->AsMatrix();
+        technique_ = effect_->GetTechniqueByName("Render2");
+        worldVariable_ = effect_->GetVariableByName("World")->AsMatrix();
+        viewVariable_ = effect_->GetVariableByName("View")->AsMatrix();
+        projectionVariable_ = effect_->GetVariableByName("Projection")->AsMatrix();
 
         // Define the input layout
         D3D10_INPUT_ELEMENT_DESC layout[] =
@@ -117,13 +119,12 @@ namespace tdxscene {
         pd3dDevice->IASetInputLayout(vertexLayout_.get());
                 
         bd_.Usage = D3D10_USAGE_DEFAULT;
-        bd_.ByteWidth = sizeof(SimpleVertex2) * N;
         bd_.BindFlags = D3D10_BIND_VERTEX_BUFFER;
         bd_.CPUAccessFlags = 0;
         bd_.MiscFlags = 0;
                 
         // Initialize the world matrices
-        D3DXMatrixIdentity(&world);
+        D3DXMatrixIdentity(&world_);
 
         // Initialize the view matrix
         SetCamera();
@@ -134,14 +135,14 @@ namespace tdxscene {
 
     LRESULT TDXScene::MsgPrc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
-        return camera.HandleMessages(hWnd, uMsg, wParam, lParam);
+        return camera_.HandleMessages(hWnd, uMsg, wParam, lParam);
     }
 
 
     HRESULT TDXScene::OnFrameMove(double fTime, float fElapsedTime, void* pUserContext)
     {
-        // Update the camera's position based on user input 
-        camera.FrameMove(fElapsedTime);
+        // Update the camera_'s position based on user input 
+        camera_.FrameMove(fElapsedTime);
 
         return S_OK;
     }
@@ -165,12 +166,12 @@ namespace tdxscene {
         //
         // Update variables that change once per frame
         //
-        auto mat = camera.GetProjMatrix();
-        projectionVariable->SetMatrix(reinterpret_cast<float *>(const_cast<D3DXMATRIX *>(mat)));
-        mat = camera.GetViewMatrix();
-        viewVariable->SetMatrix(reinterpret_cast<float *>(const_cast<D3DXMATRIX *>(mat)));
+        auto matcamera = camera_.GetProjMatrix();
+        projectionVariable_->SetMatrix(reinterpret_cast<float *>(const_cast<D3DXMATRIX *>(matcamera)));
+        auto matview = camera_.GetViewMatrix();
+        viewVariable_->SetMatrix(reinterpret_cast<float *>(const_cast<D3DXMATRIX *>(matview)));
 
-        worldVariable->SetMatrix(reinterpret_cast<float *>(&world));
+        worldVariable_->SetMatrix(reinterpret_cast<float *>(&world_));
 
         //
         // Render the cube
@@ -180,7 +181,7 @@ namespace tdxscene {
         for (auto p = 0U; p < techDesc.Passes; ++p)
         {
             technique_->GetPassByIndex(p)->Apply(0);
-            pd3dDevice->Draw(N, 0);
+            pd3dDevice->Draw(vertexsize_, 0);
         }
 
         return S_OK;
@@ -193,9 +194,9 @@ namespace tdxscene {
         // Setup the projection parameters again
         auto const fAspect = static_cast<float>(pBackBufferSurfaceDesc->Width) / static_cast<float>(pBackBufferSurfaceDesc->Height);
 
-        camera.SetProjParams(D3DX_PI / 4, fAspect, 0.1f, 100.0f);
-        camera.SetWindow(pBackBufferSurfaceDesc->Width, pBackBufferSurfaceDesc->Height);
-        camera.SetButtonMasks(MOUSE_MIDDLE_BUTTON, MOUSE_WHEEL, MOUSE_LEFT_BUTTON);
+        camera_.SetProjParams(D3DX_PI / 4, fAspect, 0.1f, 100.0f);
+        camera_.SetWindow(pBackBufferSurfaceDesc->Width, pBackBufferSurfaceDesc->Height);
+        camera_.SetButtonMasks(MOUSE_MIDDLE_BUTTON, MOUSE_WHEEL, MOUSE_LEFT_BUTTON);
 
         return S_OK;
     }
@@ -204,6 +205,7 @@ namespace tdxscene {
     HRESULT TDXScene::RedrawFunc(std::int32_t m, ID3D10Device * pd3dDevice, TDXScene::Re_Im_type reim)
     {
         if (redraw_) {
+            vertices_.resize(vertexsize_);
             pth_.reset(new std::thread([this, m, reim]{ ClearFillSimpleVertex2(m, reim); }), [this](std::thread * pth)
             {
                 if (pth->joinable()) {
@@ -216,6 +218,8 @@ namespace tdxscene {
             });
             redraw_ = false;
         }
+        
+        bd_.ByteWidth = sizeof(SimpleVertex2) * vertexsize_;
         
         static D3D10_SUBRESOURCE_DATA InitData;
         InitData.pSysMem = vertices_.data();
@@ -237,6 +241,8 @@ namespace tdxscene {
 
     void TDXScene::ClearFillSimpleVertex2(std::int32_t m, TDXScene::Re_Im_type reim)
     {
+        RewriteWithLock(complete_, false);
+
         SimpleVertex2 sv2;
         sv2.Col = { 0.0f, 0.0f, 0.0f, 0.0f };
         sv2.Pos = { 0.0f, 0.0f, 0.0f };
@@ -246,10 +252,12 @@ namespace tdxscene {
 
         tbb::parallel_for(
             std::uint32_t(0),
-            boost::numeric_cast<std::uint32_t>(N),
+            boost::numeric_cast<std::uint32_t>(vertexsize_),
             std::uint32_t(1),
             [this, m, reim](std::uint32_t i) { FillSimpleVertex2(m, reim, vertices_[i]); },
             tbb::auto_partitioner());
+
+        RewriteWithLock(complete_, true);
     }
 
 
@@ -340,7 +348,7 @@ namespace tdxscene {
         auto const pos = static_cast<float>(rmax_) * 1.2f;
         D3DXVECTOR3 Eye(0.0f, pos, -pos);
         D3DXVECTOR3 At(0.0f, 0.0f, 0.0f);
-        camera.SetViewParams(&Eye, &At);
+        camera_.SetViewParams(&Eye, &At);
     }
     
 
@@ -351,14 +359,5 @@ namespace tdxscene {
     }
 
 
-    bool RewriteWithLock(bool & dest, bool source)
-    {
-        std::mutex mtx;
-        {
-            std::lock_guard<std::mutex> lock(mtx);
-            dest = source;
-        }
-
-        return dest;
-    }
+    
 }

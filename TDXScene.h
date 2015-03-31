@@ -26,6 +26,7 @@ namespace tdxscene {
         画面描画クラス
     */
     class TDXScene final {
+    public:
 #ifndef	SIMPLEVER2
         // #region 構造体
 
@@ -39,7 +40,8 @@ namespace tdxscene {
 
         // #endregion 構造体
 
-    public:
+        // #region 列挙型
+
         //! A enumerated type
         /*!
             実部か虚部かを表す列挙型
@@ -128,6 +130,12 @@ namespace tdxscene {
     public:
         //! A property.
         /*!
+            描画スレッドの作業が完了したかどうかへのプロパティ
+        */
+        utility::Property<bool> Complete;
+
+        //! A property.
+        /*!
             スレッドへのスマートポインタのプロパティ
         */
         utility::Property<std::shared_ptr<std::thread>> Pth;
@@ -146,26 +154,32 @@ namespace tdxscene {
 
         //! A property.
         /*!
-            再描画するかどうか
+            再描画するかどうかへのプロパティ
         */
         utility::Property<bool> Redraw;
                 
         //! A property.
         /*!
-            スレッドを強制終了するかどうか
+            スレッドを強制終了するかどうかへのプロパティ
         */
         utility::Property<bool> Thread_end;
 
+        //! A property.
+        /*!
+            頂点数へのプロパティ
+        */
+        utility::Property<std::vector<SimpleVertex2>::size_type> Vertexsize;
+        
         // #endregion プロパティ
 
         // #region メンバ変数
 
-    private:
-        //! A private static member variable (constant).
+    public:
+        //! A public static member variable (constant).
         /*!
-            電子のサンプル点
+            頂点の初期値
         */
-        static std::size_t const N = 500000;
+        static std::vector<SimpleVertex2>::size_type const VERTEXSIZE_FIRST = 100000;
 
         //! A private member variable.
         /*!
@@ -177,21 +191,27 @@ namespace tdxscene {
         /*!
             A model viewing camera
         */
-        CModelViewerCamera                  camera;
+        CModelViewerCamera camera_;
+        
+        //! A private member variable.
+        /*!
+            描画スレッドの作業が完了したかどうか
+        */
+        bool complete_;
 
         //! A private member variable.
         /*!
             エフェクト＝シェーダプログラムを読ませるところ
         */
-        std::unique_ptr<ID3D10Effect, utility::Safe_Release<ID3D10Effect>> effect;
+        std::unique_ptr<ID3D10Effect, utility::Safe_Release<ID3D10Effect>> effect_;
         
         //! A private member variable.
         /*!
             射影行列
         */
-        D3DXMATRIX                          projection;
+        D3DXMATRIX projection_;
 
-        ID3D10EffectMatrixVariable*         projectionVariable;
+        ID3D10EffectMatrixVariable * projectionVariable_;
 
         //! A private member variable.
         /*!
@@ -243,6 +263,12 @@ namespace tdxscene {
 
         //! A private member variable.
         /*!
+            頂点数
+        */
+        std::vector<SimpleVertex2>::size_type vertexsize_ = VERTEXSIZE_FIRST;
+
+        //! A private member variable.
+        /*!
             vertex buffer
         */
         std::vector<SimpleVertex2> vertices_;
@@ -251,17 +277,17 @@ namespace tdxscene {
         /*!
             ビュー変換行列
         */
-        D3DXMATRIX                          view;
+        D3DXMATRIX view_;
 
-        ID3D10EffectMatrixVariable*         viewVariable;
+        ID3D10EffectMatrixVariable * viewVariable_;
 
         //! A private member variable.
         /*!
             ワールド変換行列
         */
-        D3DXMATRIX                          world;
+        D3DXMATRIX world_;
 
-        ID3D10EffectMatrixVariable*         worldVariable;
+        ID3D10EffectMatrixVariable * worldVariable_;
 
         // #region 禁止されたコンストラクタ・メンバ関数
 
@@ -296,14 +322,24 @@ namespace tdxscene {
     */
     double GetRmax(std::shared_ptr<getdata::GetData> const & pgd);
 
-    //! A function.
+    //! A template function.
     /*!
-        ロックをかけてbool型の変数を書き換える関数
+        ロックをかけて変数を書き換える関数
         \param dest 対象パラメータへの参照
         \param source 値
         \return 書き換えた値
     */
-    bool RewriteWithLock(bool & dest, bool source);
+    template <typename T>
+    T RewriteWithLock(T & dest, T source)
+    {
+        std::mutex mtx;
+        {
+            std::lock_guard<std::mutex> lock(mtx);
+            dest = source;
+        }
+
+        return dest;
+    }
 }
 
 #endif  // _TDXSCENE_H_

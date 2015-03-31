@@ -13,8 +13,9 @@ This software is released under the BSD-2 License.
 #include "SDKmisc.h"
 #include "TDXScene.h"
 #include "resource.h"
-#include <string>       // for std::wstring, std::to_string
-#include <malloc.h>     // for _aligned_malloc, _aligned_free 
+#include <string>               // for std::wstring, std::to_string
+#include <malloc.h>             // for _aligned_malloc, _aligned_free
+#include <boost/format.hpp>     // for boost::wformat
 
 using namespace tdxscene;
 
@@ -58,6 +59,30 @@ auto drawdata = 1U;
 
 //! A global variable.
 /*!
+    計算開始時間
+*/
+double drawstarttime;
+
+//! A global variable.
+/*!
+    計算終了時間
+*/
+double drawendtime;
+
+//! A global variable.
+/*!
+    計算が終了したことを示すフラグ
+*/
+bool end;
+
+//! A global variable.
+/*!
+    計算が開始したことを示すフラグ
+*/
+auto first = true;
+
+//! A global variable.
+/*!
     Font for drawing text
 */
 std::unique_ptr<ID3DX10Font, utility::Safe_Release<ID3DX10Font>> font;
@@ -80,6 +105,10 @@ std::unique_ptr<TDXScene, decltype(aligned_deleter)> scene;
 */
 std::unique_ptr<ID3DX10Sprite, utility::Safe_Release<ID3DX10Sprite>> sprite;
 
+//! A global variable.
+/*!
+    テキスト表示用
+*/
 std::unique_ptr<CDXUTTextHelper, utility::Safe_Delete<CDXUTTextHelper>> txthelper;
 
 //! A global variable.
@@ -100,10 +129,13 @@ auto reim = TDXScene::Re_Im_type::REAL;
 #define IDC_TOGGLEFULLSCREEN    1
 #define IDC_CHANGEDEVICE        2
 #define IDC_TOGGLEROTATION      3
-#define IDC_READDATA            4
-#define IDC_COMBOBOX            5
-#define IDC_RADIOA              6
-#define IDC_RADIOB              7
+#define IDC_REDRAW              4
+#define IDC_READDATA            5
+#define IDC_COMBOBOX            6
+#define IDC_RADIOA              7
+#define IDC_RADIOB              8
+#define IDC_OUTPUT              9
+#define IDC_SLIDER				10
 
 //--------------------------------------------------------------------------------------
 // Forward declarations 
@@ -287,18 +319,30 @@ HRESULT CALLBACK OnD3D10ResizedSwapChain(ID3D10Device* pd3dDevice, IDXGISwapChai
 //--------------------------------------------------------------------------------------
 void RenderText(ID3D10Device* pd3dDevice, double fTime)
 {
-    char buf[1000];
-    WCHAR	wbuf[1000];
-    memset(wbuf, 0, sizeof(wbuf));
+    if (!scene->Complete && first) {
+        drawstarttime = fTime;
+        end = false;
+        first = false;
+    }
+    else if (scene->Complete && !end) {
+        drawendtime = fTime - drawstarttime;
+        end = true;
+    }
+
+    std::wstring str;
+    if (end) {
+        str = (boost::wformat(L"計算時間 = %.3f秒") % drawendtime).str();
+    }
+    else {
+        str = (boost::wformat(L"計算時間 = %.3f秒") % (fTime - drawstarttime)).str();
+    }
+
     txthelper->Begin();
     txthelper->SetInsertionPos(2, 0);
-    txthelper->SetForegroundColor(D3DXCOLOR(1.0f, 1.0f, 0.0f, 1.0f));
-    sprintf_s(buf, "time = %f", fTime);
-    std::locale::global(std::locale("japanese"));
-    MultiByteToWideChar(CP_ACP, 0, buf, strlen(buf), wbuf, sizeof(wbuf));
+    txthelper->SetForegroundColor(D3DXCOLOR(1.000f, 0.945f, 0.059f, 1.000f));
     txthelper->DrawTextLine(DXUTGetFrameStats(DXUTIsVsyncEnabled()));
     txthelper->DrawTextLine(DXUTGetDeviceStats());
-    txthelper->DrawTextLine(wbuf);
+    txthelper->DrawTextLine(str.c_str());
     txthelper->End();
     pd3dDevice->IASetInputLayout(scene->PvertexLayout().get());
 }
@@ -543,6 +587,10 @@ void CALLBACK OnGUIEvent(UINT nEvent, int nControlID, CDXUTControl* pControl, vo
         ROT_FLAG = !ROT_FLAG;
         break;
 
+    case IDC_REDRAW:
+        RedrawFlagTrue();
+        break;
+
     case IDC_READDATA:
         StopDraw();
         ReadData();
@@ -550,6 +598,7 @@ void CALLBACK OnGUIEvent(UINT nEvent, int nControlID, CDXUTControl* pControl, vo
         scene->Pgd = pgd;
         scene->Thread_end = false;
         scene->Redraw = true;
+        first = true;
         ::SetWindowText(DXUTGetHWND(), CreateWindowTitle().c_str());
         break;
 
@@ -571,6 +620,11 @@ void CALLBACK OnGUIEvent(UINT nEvent, int nControlID, CDXUTControl* pControl, vo
 
     case IDC_RADIOB:
         reim = TDXScene::Re_Im_type::IMAGINARY;
+        RedrawFlagTrue();
+        break;
+
+    case IDC_SLIDER:
+        scene->Vertexsize(static_cast<std::vector<TDXScene::SimpleVertex2>::size_type>((reinterpret_cast<CDXUTSlider*>(pControl))->GetValue()));
         RedrawFlagTrue();
         break;
 
@@ -619,6 +673,7 @@ void RedrawFlagTrue()
     StopDraw();
     scene->Thread_end = false;
     scene->Redraw = true;
+    first = true;
 }
 
 
@@ -632,7 +687,8 @@ void SetUI()
     g_HUD.AddButton(IDC_CHANGEDEVICE, L"Change device (F2)", 35, iY += 24, 125, 22, VK_F2);
     g_HUD.AddButton(IDC_TOGGLEROTATION, L"Toggle Rotaion Animation", 35, iY += 24, 125, 22);
 
-    g_HUD.AddButton(IDC_READDATA, L"新規ファイル読み込み", 35, iY += 34, 125, 22);
+    g_HUD.AddButton(IDC_REDRAW, L"再描画", 35, iY += 34, 125, 22);
+    g_HUD.AddButton(IDC_READDATA, L"新規ファイル読み込み", 35, iY += 24, 125, 22);
 
     // Combobox
     CDXUTComboBox* pCombo;
@@ -692,6 +748,11 @@ void SetUI()
             g_HUD.AddRadioButton(IDC_RADIOB, 1, L"虚部", 35, iY += 28, 125, 22, false, L'2');
         }
     }
+
+    // 角度の調整
+    g_HUD.AddStatic(IDC_OUTPUT, L"頂点数", 20, iY += 34, 125, 22);
+    g_HUD.GetStatic(IDC_OUTPUT)->SetTextColor(D3DCOLOR_ARGB(255, 255, 255, 255));
+    g_HUD.AddSlider(IDC_SLIDER, 35, iY += 24, 125, 22, 0, 1000000, TDXScene::VERTEXSIZE_FIRST);
 }
 
 
