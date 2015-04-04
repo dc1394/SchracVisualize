@@ -132,13 +132,13 @@ namespace tdxscene {
         /*!
             描画スレッドの作業が完了したかどうかへのプロパティ
         */
-        utility::Property<bool> Complete;
+        utility::Property<bool> const Complete;
 
         //! A property.
         /*!
             スレッドへのスマートポインタのプロパティ
         */
-        utility::Property<std::shared_ptr<std::thread>> Pth;
+        utility::Property<std::shared_ptr<std::thread>> const Pth;
 
         //! A property.
         /*!
@@ -150,7 +150,7 @@ namespace tdxscene {
         /*!
             VertexLayoutのスマートポインタのプロパティ
         */
-        utility::Property<std::shared_ptr<ID3D10InputLayout>> PvertexLayout;
+        utility::Property<std::shared_ptr<ID3D10InputLayout>> const PvertexLayout;
 
         //! A property.
         /*!
