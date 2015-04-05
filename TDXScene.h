@@ -15,6 +15,7 @@
 #include "getdata/getdata.h"
 #include "utility/property.h"
 #include "utility/utility.h"
+#include <functional>			// for std::function
 #include <memory>               // for std::shared_ptr, for std::unique_ptr
 #include <thread>               // for std::thread
 #include <vector>               // for std::vector
@@ -27,8 +28,23 @@ namespace tdxscene {
     */
     class TDXScene final {
     public:
+		// #region 構造体
+
+		//! A struct.
+		/*!
+			球面調和関数の最小値をgsl_min_fminimizerで求めるための構造体
+		*/
+		struct QuantumnumPhi {
+			//! A public member variable.
+			/*!
+				
+			*/
+			std::uint32_t l;
+			std::int32_t m;
+			double phi;
+		};
+
 #ifndef	SIMPLEVER2
-        // #region 構造体
 
         struct SimpleVertex2
         {
@@ -38,7 +54,7 @@ namespace tdxscene {
 #define SIMPLEVER2
 #endif
 
-        // #endregion 構造体
+		// #endregion 構造体
 
         // #region 列挙型
 
@@ -116,6 +132,18 @@ namespace tdxscene {
             \param ver 対象のSimpleVertex2
         */
         void FillSimpleVertex2(std::int32_t m, TDXScene::Re_Im_type reim, SimpleVertex2 & ver);
+		
+		//! A private member function.
+		/*!
+			データオブジェクトからrmaxを求める
+			\param fpfunc 最大最小を求めるための関数ポインタ
+			//\param x 変数
+			//\param params その他のパラメータ
+			//\return 関数値
+			\param params 関数の引数
+			\return 関数の最大値
+		*/
+		double FuncMinMax(double(*fpfunc)(double, void *), void * params) const;
 
         //! A private member function.
         /*!
@@ -313,7 +341,7 @@ namespace tdxscene {
 
         // #endregion 禁止されたコンストラクタ・メンバ関数
     };
-
+	
     //! A function.
     /*!
         データオブジェクトからrmaxを求める
@@ -322,6 +350,7 @@ namespace tdxscene {
     */
     double GetRmax(std::shared_ptr<getdata::GetData> const & pgd);
 
+	template <typename T>
     //! A template function.
     /*!
         ロックをかけて変数を書き換える関数
@@ -329,7 +358,6 @@ namespace tdxscene {
         \param source 値
         \return 書き換えた値
     */
-    template <typename T>
     T RewriteWithLock(T & dest, T source)
     {
         std::mutex mtx;

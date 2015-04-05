@@ -14,7 +14,10 @@
 #include <boost/assert.hpp>                                     // for BOOST_ASSERT
 #include <boost/cast.hpp>                                       // for boost::numeric_cast
 #include <boost/math/special_functions/spherical_harmonic.hpp>  // for boost::math::spherical_harmonic
+#include <boost/math/constants/constants.hpp>					// for boost::math::constants
 #include <boost/range/algorithm.hpp>                            // for boost::fill
+#include <gsl/gsl_errno.h>
+#include <gsl/gsl_min.h>
 #include <tbb/parallel_for.h>                                   // for tbb::parallel_for
 #include <tbb/partitioner.h>                                    // for tbb::auto_partitioner
 #include <tbb/task_scheduler_init.h>                            // for tbb::task_scheduler_init
@@ -251,14 +254,18 @@ namespace tdxscene {
         sv2.Pos = { 0.0f, 0.0f, 0.0f };
         boost::fill(vertices_, sv2);
 
-        tbb::task_scheduler_init init;
+        /*tbb::task_scheduler_init init;
 
         tbb::parallel_for(
             std::uint32_t(0),
             boost::numeric_cast<std::uint32_t>(vertexsize_),
             std::uint32_t(1),
             [this, m, reim](std::uint32_t i) { FillSimpleVertex2(m, reim, vertices_[i]); },
-            tbb::auto_partitioner());
+            tbb::auto_partitioner());*/
+
+		for (auto i = 0; i < vertices_.size(); i++) {
+			FillSimpleVertex2(m, reim, vertices_[i]);
+		}
 
         RewriteWithLock(complete_, true);
     }
@@ -276,6 +283,17 @@ namespace tdxscene {
 
         myrandom::MyRand mr(-rmax_, rmax_);
         myrandom::MyRand mr2(pgd_->Funcmin, pgd_->Funcmax);
+		
+		QuantumnumPhi qp;
+		qp.l = pgd_->L;
+		qp.m = m;
+		qp.phi = 0.0;
+
+		auto func = [](double x, void * param) -> double {
+			auto qp = reinterpret_cast<QuantumnumPhi *>(param);
+			return boost::math::spherical_harmonic_r(qp->l, qp->m, x, qp->phi);
+		};
+		double aa = FuncMinMax(func, reinterpret_cast<void *>(&qp));
 
         do {
             if (thread_end_) {
@@ -343,6 +361,51 @@ namespace tdxscene {
         ver.Col.g = sign < 0 ? 0.8f : 0.0f;
         ver.Col.a = 1.0f;
     }
+
+
+	double TDXScene::FuncMinMax(double(*fpfunc)(double, void *), void * params) const
+	{
+		auto const fminimizer_deleter = [](gsl_min_fminimizer * s)
+		{
+			gsl_min_fminimizer_free(s);
+		};
+		std::unique_ptr<gsl_min_fminimizer, decltype(fminimizer_deleter)> s(
+			gsl_min_fminimizer_alloc(gsl_min_fminimizer_brent),
+			fminimizer_deleter);
+
+		gsl_function F;
+
+		F.function = fpfunc;
+		F.params = params;
+
+		gsl_min_fminimizer_set(s.get(), &F, 0.1, 0.0, boost::math::constants::pi<double>());
+
+		for (auto i = 0; i < 100; i++) {
+			auto const status = gsl_min_fminimizer_iterate(s.get());
+
+			switch (status)
+			{
+			case GSL_EBADFUNC:
+				throw std::runtime_error("the iteration encountered a singular point where"
+						"the function or its derivative evaluated to Inf or NaN");
+				return 0.0;
+				break;
+
+			case GSL_EZERODIV:
+				throw std::runtime_error("the derivative of the function vanished at the iteration point,"
+						"preventing the algorithm from continuing without a division by zero.");
+				return 0.0;
+				break;
+
+			case GSL_SUCCESS:
+				return gsl_min_fminimizer_f_minimum(s.get());
+				break;
+
+			default:
+				break;
+			}
+		}
+	}
 
 
     void TDXScene::SetCamera()
