@@ -13,15 +13,11 @@
 #include "DXUT.h"
 #include "DXUTcamera.h"
 #include "getdata/getdata.h"
-#include "utility/functional.h"
 #include "utility/property.h"
 #include "utility/utility.h"
-#include <functional>			// for std::function
 #include <memory>               // for std::shared_ptr, for std::unique_ptr
 #include <thread>               // for std::thread
 #include <vector>               // for std::vector
-#include <boost/math/constants/constants.hpp>	// for boost::math::constants::pi
-#include <boost/range/algorithm.hpp>    // for boost::max_element
 #include <d3dx9math.h>
 
 namespace tdxscene {
@@ -31,30 +27,18 @@ namespace tdxscene {
     */
     class TDXScene final {
     public:
-		// #region 構造体
-		
 #ifndef	SIMPLEVER2
-		//! A struct.
-		/*!
-			頂点構造体
-		*/
-        struct SimpleVertex2 {
-			//! A public member variable.
-			/*!
-				位置
-			*/
+        // #region 構造体
+
+        struct SimpleVertex2
+        {
             D3DXVECTOR3 Pos;
-			
-			//! A public member variable.
-			/*!
-				色
-			*/
             D3DXCOLOR	Col;
         };
 #define SIMPLEVER2
 #endif
 
-		// #endregion 構造体
+        // #endregion 構造体
 
         // #region 列挙型
 
@@ -132,15 +116,6 @@ namespace tdxscene {
             \param ver 対象のSimpleVertex2
         */
         void FillSimpleVertex2(std::int32_t m, TDXScene::Re_Im_type reim, SimpleVertex2 & ver);
-		
-		template <typename FUNCTYPE>
-		//! A private member function (template function).
-		/*!
-			データオブジェクトからrmaxを求める
-			\param func 最大最小を求めるための関数ポインタ
-			\return 関数の最大値
-		*/
-		double FuncMinMax(utility::Functional<FUNCTYPE> const & func) const;
 
         //! A private member function.
         /*!
@@ -157,13 +132,13 @@ namespace tdxscene {
         /*!
             描画スレッドの作業が完了したかどうかへのプロパティ
         */
-        utility::Property<bool> const Complete;
+        utility::Property<bool> Complete;
 
         //! A property.
         /*!
             スレッドへのスマートポインタのプロパティ
         */
-        utility::Property<std::shared_ptr<std::thread>> const Pth;
+        utility::Property<std::shared_ptr<std::thread>> Pth;
 
         //! A property.
         /*!
@@ -175,7 +150,7 @@ namespace tdxscene {
         /*!
             VertexLayoutのスマートポインタのプロパティ
         */
-        utility::Property<std::shared_ptr<ID3D10InputLayout>> const PvertexLayout;
+        utility::Property<std::shared_ptr<ID3D10InputLayout>> PvertexLayout;
 
         //! A property.
         /*!
@@ -204,14 +179,7 @@ namespace tdxscene {
         /*!
             頂点の初期値
         */
-        static std::vector<SimpleVertex2>::size_type const VERTEXSIZE_FIRST = 10000;
-
-	private:
-		//! A private static member variable (constant).
-		/*!
-			頂点の初期値
-		*/
-		static float const MAGNIFICATION;
+        static std::vector<SimpleVertex2>::size_type const VERTEXSIZE_FIRST = 100000;
 
         //! A private member variable.
         /*!
@@ -268,8 +236,6 @@ namespace tdxscene {
             描画するrの最大値
         */
         double rmax_;
-
-		double thetamax;
 
         //! A private member variable.
         /*!
@@ -347,30 +313,7 @@ namespace tdxscene {
 
         // #endregion 禁止されたコンストラクタ・メンバ関数
     };
-	
-	template <typename FUNCTYPE>
-	//! A private member function (template function).
-	/*!
-		関数の最小値、最大値を求める
-		\param func 最大最小を求めるための関数ポインタ
-		\return 関数の最大値
-	*/
-	double TDXScene::FuncMinMax(utility::Functional<FUNCTYPE> const & func) const
-	{
-		std::vector<double>::size_type const size = 1000001;
-		auto const pi = boost::math::constants::pi<double>();
 
-		auto const dx = pi / static_cast<double>(size - 1);
-		std::vector<double> vec;
-		vec.reserve(size);
-
-		for (auto i = 0U; i < size; i++) {
-			vec.push_back(func(static_cast<double>(i) * dx));
-		}
-
-		return *boost::max_element(vec);
-	}
-	
     //! A function.
     /*!
         データオブジェクトからrmaxを求める
@@ -379,7 +322,6 @@ namespace tdxscene {
     */
     double GetRmax(std::shared_ptr<getdata::GetData> const & pgd);
 
-	template <typename T>
     //! A template function.
     /*!
         ロックをかけて変数を書き換える関数
@@ -387,6 +329,7 @@ namespace tdxscene {
         \param source 値
         \return 書き換えた値
     */
+    template <typename T>
     T RewriteWithLock(T & dest, T source)
     {
         std::mutex mtx;
