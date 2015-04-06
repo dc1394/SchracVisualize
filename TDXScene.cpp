@@ -14,15 +14,16 @@
 #include <boost/assert.hpp>                                     // for BOOST_ASSERT
 #include <boost/cast.hpp>                                       // for boost::numeric_cast
 #include <boost/math/special_functions/spherical_harmonic.hpp>  // for boost::math::spherical_harmonic
-#include <boost/math/constants/constants.hpp>					// for boost::math::constants
+#include <boost/optional.hpp>									// for boost::optional
 #include <boost/range/algorithm.hpp>                            // for boost::fill
-#include <gsl/gsl_errno.h>
-#include <gsl/gsl_min.h>
+#include <boost/utility/in_place_factory.hpp>					// for boost::in_place
 #include <tbb/parallel_for.h>                                   // for tbb::parallel_for
 #include <tbb/partitioner.h>                                    // for tbb::auto_partitioner
 #include <tbb/task_scheduler_init.h>                            // for tbb::task_scheduler_init
 
 namespace tdxscene {
+	float const TDXScene::MAGNIFICATION = 1.2f;
+
     TDXScene::TDXScene(std::shared_ptr<getdata::GetData> const & pgd) :
         Complete([this]{ return complete_; }, nullptr),
         Pth([this]{ return pth_; }, nullptr),
@@ -253,6 +254,13 @@ namespace tdxscene {
         sv2.Col = { 0.0f, 0.0f, 0.0f, 0.0f };
         sv2.Pos = { 0.0f, 0.0f, 0.0f };
         boost::fill(vertices_, sv2);
+		
+		auto thetamaxfunc = utility::make_functional([this, m](double x) {
+			auto const res = std::abs(boost::math::spherical_harmonic(pgd_->L, m, x, 0.0));
+			return res * res * (2.0 * boost::math::constants::pi<double>());
+		});
+		
+		thetamax = FuncMinMax(thetamaxfunc);
 
         /*tbb::task_scheduler_init init;
 
@@ -281,137 +289,134 @@ namespace tdxscene {
         auto sign = 0;
         double x, y, z;
 
-        myrandom::MyRand mr(-rmax_, rmax_);
-        myrandom::MyRand mr2(pgd_->Funcmin, pgd_->Funcmax);
+		myrandom::MyRand mrx(pgd_->R_meshmin, rmax_);
+        myrandom::MyRand mry(pgd_->Funcmin, pgd_->Funcmax);
+
+		myrandom::MyRand mthetax(0.0, boost::math::constants::pi<double>());
+		boost::optional<myrandom::MyRand> mthetay = boost::none;
+
+		myrandom::MyRand mphix(0.0, 2.0 * boost::math::constants::pi<double>());
+		boost::optional<myrandom::MyRand> mphiy = boost::none;
 		
-		QuantumnumPhi qp;
-		qp.l = pgd_->L;
-		qp.m = m;
-		qp.phi = 0.0;
+		double r = 0.0;
+		double theta = 0.0;
+		double phi = 0.0;
 
-		auto func = [](double x, void * param) -> double {
-			auto qp = reinterpret_cast<QuantumnumPhi *>(param);
-			return boost::math::spherical_harmonic_r(qp->l, qp->m, x, qp->phi);
-		};
-		double aa = FuncMinMax(func, reinterpret_cast<void *>(&qp));
+		/*auto thetaminfunc = [](double x, void * param) {
+			auto const qp = reinterpret_cast<QuantumnumPhi const *>(param);
+			auto const res = std::abs(boost::math::spherical_harmonic(qp->l, qp->m, x, qp->phi));
+			return res * res;
+		};*/
 
-        do {
-            if (thread_end_) {
-                return;
-            }
+	
+		switch (pgd_->Rho_wf_type_) {
+		case getdata::GetData::Rho_Wf_type::RHO:
+		{
+			double Rr;
+			do {
+				r = mrx.myrand();
+				Rr = (*pgd_)(r);
+				Rr *= Rr;
+			} while (Rr > mry.myrand());
 
-            x = mr.myrand();
-            y = mr.myrand();
-            z = mr.myrand();
+			double Ttheta;
+			//auto const thetamin = FuncMinMax(thetaminfunc, &qp);
 
-            auto const r = std::sqrt(x * x + y * y + z * z);
-            if (r < pgd_->R_meshmin()) {
-                continue;
-            }
+			mthetay = boost::in_place(0.0, thetamax);
+			do {
+				theta = mthetax.myrand();
+				Ttheta = std::abs(boost::math::spherical_harmonic(pgd_->L, m, theta, 0.0));
+				Ttheta *= Ttheta;
+			} while (Ttheta > mthetay->myrand());
 
-            switch (pgd_->Rho_wf_type_) {
-            case getdata::GetData::Rho_Wf_type::RHO:
-            {
-                auto const phi = std::acos(x / std::sqrt(x * x + y * y));
-                pp = std::abs((*pgd_)(r)* boost::math::spherical_harmonic(pgd_->L, m, std::acos(z / r), phi));
-                pp *= pp;
-            }
-            break;
+			//double Pphi;
+			//mphiy = boost::in_place(0.0, 1.0 / 2.0 * boost::math::constants::pi<double>());
+			//do {
+			phi = mphix.myrand();
+			//		Pphi = phi * phi;
+			//	} while (Pphi > mphiy->myrand());
+		}
+		}
+				
+    //    do {
+    //        if (thread_end_) {
+    //            return;
+    //        }
 
-            case getdata::GetData::Rho_Wf_type::WF:
-            {
-                auto const phi = std::acos(x / std::sqrt(x * x + y * y));
-                double ylm = 0.0;
-                switch (reim) {
-                case TDXScene::Re_Im_type::REAL:
-                    ylm = boost::math::spherical_harmonic_r(pgd_->L, m, std::acos(z / r), phi);
-                    break;
+    //        x = mr.myrand();
+    //        y = mr.myrand();
+    //        z = mr.myrand();
 
-                case TDXScene::Re_Im_type::IMAGINARY:
-                    ylm = boost::math::spherical_harmonic_i(pgd_->L, m, std::acos(z / r), phi);
-                    break;
+    //        auto const r = std::sqrt(x * x + y * y + z * z);
+    //        if (r < pgd_->R_meshmin()) {
+    //            continue;
+    //        }
 
-                default:
-                    BOOST_ASSERT(!"何かがおかしい!");
-                    break;
-                }
+    //        switch (pgd_->Rho_wf_type_) {
+    //        case getdata::GetData::Rho_Wf_type::RHO:
+    //        {
+    //            /*auto const phi = std::acos(x / std::sqrt(x * x + y * y));
+    //            pp = std::abs((*pgd_)(r)* boost::math::spherical_harmonic(pgd_->L, m, std::acos(z / r), phi));
+    //            pp *= pp;*/
+				//switch (pgd_->L) {
+				//case 0:
 
-                pp = (*pgd_)(r) * ylm;
-            }
-            break;
+				//}
+    //        }
+    //        break;
 
-            default:
-                BOOST_ASSERT(!"何かがおかしい!");
-                break;
-            }
+    //        case getdata::GetData::Rho_Wf_type::WF:
+    //        {
+    //            auto const phi = std::acos(x / std::sqrt(x * x + y * y));
+    //            double ylm = 0.0;
+    //            switch (reim) {
+    //            case TDXScene::Re_Im_type::REAL:
+    //                ylm = boost::math::spherical_harmonic_r(pgd_->L, m, std::acos(z / r), phi);
+    //                break;
 
-            sign = (pp > 0.0) - (pp < 0.0);
+    //            case TDXScene::Re_Im_type::IMAGINARY:
+    //                ylm = boost::math::spherical_harmonic_i(pgd_->L, m, std::acos(z / r), phi);
+    //                break;
 
-            if (!m && pgd_->Rho_wf_type_ == getdata::GetData::Rho_Wf_type::WF && reim == TDXScene::Re_Im_type::IMAGINARY) {
-                break;
-            }
-        } while (std::fabs(pp) < std::fabs(mr2.myrand()));
+    //            default:
+    //                BOOST_ASSERT(!"何かがおかしい!");
+    //                break;
+    //            }
 
-        ver.Pos.x = static_cast<float>(x);
-        ver.Pos.y = static_cast<float>(y);
-        ver.Pos.z = static_cast<float>(z);
+    //            pp = (*pgd_)(r) * ylm;
+    //        }
+    //        break;
 
-        ver.Col.r = sign > 0 ? 0.8f : 0.0f;
+    //        default:
+    //            BOOST_ASSERT(!"何かがおかしい!");
+    //            break;
+    //        }
+
+    //        sign = (pp > 0.0) - (pp < 0.0);
+
+    //        if (!m && pgd_->Rho_wf_type_ == getdata::GetData::Rho_Wf_type::WF && reim == TDXScene::Re_Im_type::IMAGINARY) {
+    //            break;
+    //        }
+    //    } while (std::fabs(pp) < std::fabs(mr2.myrand()));
+
+        //ver.Pos.x = static_cast<float>(x);
+        //ver.Pos.y = static_cast<float>(y);
+        //ver.Pos.z = static_cast<float>(z);
+
+		ver.Pos.x = static_cast<float>(r * std::sin(theta) * std::cos(phi));
+		ver.Pos.y = static_cast<float>(r * std::sin(theta) * std::sin(phi));
+		ver.Pos.z = static_cast<float>(r * std::cos(theta));
+
+		ver.Col.r = 0.8f;//sign > 0 ? 0.8f : 0.0f;
         ver.Col.b = 0.8f;
-        ver.Col.g = sign < 0 ? 0.8f : 0.0f;
+		ver.Col.g = 0.0f;//sign < 0 ? 0.8f : 0.0f;
         ver.Col.a = 1.0f;
     }
-
-
-	double TDXScene::FuncMinMax(double(*fpfunc)(double, void *), void * params) const
-	{
-		auto const fminimizer_deleter = [](gsl_min_fminimizer * s)
-		{
-			gsl_min_fminimizer_free(s);
-		};
-		std::unique_ptr<gsl_min_fminimizer, decltype(fminimizer_deleter)> s(
-			gsl_min_fminimizer_alloc(gsl_min_fminimizer_brent),
-			fminimizer_deleter);
-
-		gsl_function F;
-
-		F.function = fpfunc;
-		F.params = params;
-
-		gsl_min_fminimizer_set(s.get(), &F, 0.1, 0.0, boost::math::constants::pi<double>());
-
-		for (auto i = 0; i < 100; i++) {
-			auto const status = gsl_min_fminimizer_iterate(s.get());
-
-			switch (status)
-			{
-			case GSL_EBADFUNC:
-				throw std::runtime_error("the iteration encountered a singular point where"
-						"the function or its derivative evaluated to Inf or NaN");
-				return 0.0;
-				break;
-
-			case GSL_EZERODIV:
-				throw std::runtime_error("the derivative of the function vanished at the iteration point,"
-						"preventing the algorithm from continuing without a division by zero.");
-				return 0.0;
-				break;
-
-			case GSL_SUCCESS:
-				return gsl_min_fminimizer_f_minimum(s.get());
-				break;
-
-			default:
-				break;
-			}
-		}
-	}
-
 
     void TDXScene::SetCamera()
     {
         // Initialize the view matrix
-        auto const pos = static_cast<float>(rmax_) * 1.2f;
+		auto const pos = static_cast<float>(rmax_) * TDXScene::MAGNIFICATION;
         D3DXVECTOR3 Eye(0.0f, pos, -pos);
         D3DXVECTOR3 At(0.0f, 0.0f, 0.0f);
         camera_.SetViewParams(&Eye, &At);

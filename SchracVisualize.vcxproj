@@ -399,6 +399,7 @@ copy document\readme.txt Release</Command>
     <ClInclude Include="myrandom\myrand.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="TDXScene.h" />
+    <ClInclude Include="utility\functional.h" />
     <ClInclude Include="utility\property.h" />
     <ClInclude Include="utility\utility.h" />
     <None Include="SchracVisualize.fx" />
