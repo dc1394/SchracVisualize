@@ -1,8 +1,8 @@
 ﻿/*! \file tdxscene.h
-    \brief TDXSceneクラスの宣言
+\brief TDXSceneクラスの宣言
 
-    Copyright ©  2015 @dc1394 All Rights Reserved.
-    This software is released under the BSD-2 License.
+Copyright ©  2015 @dc1394 All Rights Reserved.
+This software is released under the BSD-2 License.
 */
 
 #ifndef _TDXSCENE_H_
@@ -129,15 +129,6 @@ namespace tdxscene {
 		*/
 		void FillSimpleVertex2(std::int32_t m, TDXScene::Re_Im_type reim, SimpleVertex2 & ver);
 
-		template <typename FUNCTYPE>
-		//! A private member function (template function).
-		/*!
-		データオブジェクトからrmaxを求める
-		\param func 最大最小を求めるための関数ポインタ
-		\return 関数の最大値
-		*/
-		double FuncMinMax(utility::Functional<FUNCTYPE> const & func) const;
-
 		//! A private member function.
 		/*!
 		カメラの位置をセットする
@@ -205,7 +196,7 @@ namespace tdxscene {
 	private:
 		//! A private static member variable (constant).
 		/*!
-		頂点の初期値
+		カメラの位置の倍率
 		*/
 		static float const MAGNIFICATION;
 
@@ -293,19 +284,19 @@ namespace tdxscene {
 
 		//! A private member variable.
 		/*!
-			頂点数
+		頂点数
 		*/
 		std::vector<SimpleVertex2>::size_type vertexsize_ = VERTEXSIZE_FIRST;
 
 		//! A private member variable.
 		/*!
-			vertex buffer
+		vertex buffer
 		*/
 		std::vector<SimpleVertex2> vertices_;
 
 		//! A private member variable.
 		/*!
-			ビュー変換行列
+		ビュー変換行列
 		*/
 		D3DXMATRIX view_;
 
@@ -313,7 +304,7 @@ namespace tdxscene {
 
 		//! A private member variable.
 		/*!
-			ワールド変換行列
+		ワールド変換行列
 		*/
 		D3DXMATRIX world_;
 
@@ -323,53 +314,53 @@ namespace tdxscene {
 
 		//! A private constructor (deleted).
 		/*!
-			デフォルトコンストラクタ（禁止）
+		デフォルトコンストラクタ（禁止）
 		*/
 		TDXScene() = delete;
 
 		//! A private copy constructor (deleted).
 		/*!
-			コピーコンストラクタ（禁止）
+		コピーコンストラクタ（禁止）
 		*/
 		TDXScene(TDXScene const &) = delete;
 
 		//! A private member function (deleted).
 		/*!
-			operator=()の宣言（禁止）
-			\param コピー元のオブジェクト（未使用）
-			\return コピー元のオブジェクト
+		operator=()の宣言（禁止）
+		\param コピー元のオブジェクト（未使用）
+		\return コピー元のオブジェクト
 		*/
 		TDXScene & operator=(TDXScene const &) = delete;
 
 		// #endregion 禁止されたコンストラクタ・メンバ関数
 	};
 
-    //! A function.
-    /*!
-        データオブジェクトからrmaxを求める
-        \param pgd データオブジェクト
-        \return rmaxの値
-    */
-    double GetRmax(std::shared_ptr<getdata::GetData> const & pgd);
+	//! A function.
+	/*!
+	データオブジェクトからrmaxを求める
+	\param pgd データオブジェクト
+	\return rmaxの値
+	*/
+	double GetRmax(std::shared_ptr<getdata::GetData> const & pgd);
 
 	template <typename T>
 	//! A template function.
-    /*!
-        ロックをかけて変数を書き換える関数
-        \param dest 対象パラメータへの参照
-        \param source 値
-        \return 書き換えた値
-    */
-    T RewriteWithLock(T & dest, T source)
-    {
-        std::mutex mtx;
-        {
-            std::lock_guard<std::mutex> lock(mtx);
-            dest = source;
-        }
+	/*!
+	ロックをかけて変数を書き換える関数
+	\param dest 対象パラメータへの参照
+	\param source 値
+	\return 書き換えた値
+	*/
+	T RewriteWithLock(T & dest, T source)
+	{
+		std::mutex mtx;
+		{
+			std::lock_guard<std::mutex> lock(mtx);
+			dest = source;
+		}
 
-        return dest;
-    }
+		return dest;
+	}
 }
 
 #endif  // _TDXSCENE_H_
