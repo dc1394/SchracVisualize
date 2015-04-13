@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿================================================================================
 【 ソフト名 】SchracVisualize
 【  作成者  】@dc1394
@@ -178,3 +179,7 @@ EFFET JURIDIQUE.  Le présent contrat décrit certains droits juridiques. Vous p
   SchracVisualizeには®Intel CorpolationによるIntel® Threading Building Blocks
 　(Intel® TBB)を使用しています。
   こちらのライセンスは GNU General Public License, version 2 になります。
+=======
+# SchracVisualize
+「schrac」での計算結果を可視化するソフトです。
+>>>>>>> origin/master
