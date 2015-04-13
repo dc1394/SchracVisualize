@@ -271,7 +271,7 @@ namespace tdxscene {
 			return;
 		}
 
-		auto pp = 0.0;
+		auto pp = 0.0, p = 0.0;
 		auto sign = 0;
 		double x, y, z;
 
@@ -298,6 +298,8 @@ namespace tdxscene {
 				auto const phi = std::acos(x / std::sqrt(x * x + y * y));
 				pp = std::abs((*pgd_)(r)* boost::math::spherical_harmonic(pgd_->L, m, std::acos(z / r), phi));
 				pp *= pp;
+				p = mr2.myrand();
+				p *= p;
 			}
 			break;
 
@@ -320,6 +322,7 @@ namespace tdxscene {
 				}
 
 				pp = (*pgd_)(r)* ylm;
+				p = mr2.myrand();
 			}
 			break;
 
@@ -333,7 +336,8 @@ namespace tdxscene {
 			if (!m && pgd_->Rho_wf_type_ == getdata::GetData::Rho_Wf_type::WF && reim == TDXScene::Re_Im_type::IMAGINARY) {
 				break;
 			}
-		} while (std::fabs(pp) < std::fabs(mr2.myrand()));
+			
+		} while (std::fabs(pp) < std::fabs(p));
 
 		ver.Pos.x = static_cast<float>(x);
 		ver.Pos.y = static_cast<float>(y);

@@ -191,7 +191,7 @@ namespace tdxscene {
 		/*!
 		頂点の初期値
 		*/
-		static std::vector<SimpleVertex2>::size_type const VERTEXSIZE_FIRST = 10000;
+		static std::vector<SimpleVertex2>::size_type const VERTEXSIZE_FIRST = 100000;
 
 	private:
 		//! A private static member variable (constant).
