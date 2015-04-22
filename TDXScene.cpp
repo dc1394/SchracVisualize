@@ -296,10 +296,9 @@ namespace tdxscene {
 			case getdata::GetData::Rho_Wf_type::RHO:
 			{
 				auto const phi = std::acos(x / std::sqrt(x * x + y * y));
-				pp = std::abs((*pgd_)(r)* boost::math::spherical_harmonic(pgd_->L, m, std::acos(z / r), phi));
-				pp *= pp;
+				pp = boost::math::spherical_harmonic_r(pgd_->L, m, std::acos(z / r), phi);
+				pp = (*pgd_)(r) * pp * pp;
 				p = mr2.myrand();
-				p *= p;
 			}
 			break;
 
