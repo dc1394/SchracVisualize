@@ -1,7 +1,7 @@
 ﻿/*! \file tdxscene.cpp
-\brief TDXSceneクラスの実装
-Copyright ©  2015 @dc1394 All Rights Reserved.
-This software is released under the BSD-2 License.
+    \brief TDXSceneクラスの実装
+    Copyright ©  2015 @dc1394 All Rights Reserved.
+    This software is released under the BSD-2 License.
 */
 
 #include "DXUT.h"
@@ -302,7 +302,8 @@ namespace tdxscene {
                 else {
                     pp = boost::math::spherical_harmonic_i(pgd_->L, m, std::acos(z / r), phi);
                 }
-                    pp = ((*pgd_)(r)* pp * pp);
+                
+                pp = ((*pgd_)(r)* pp * pp);
 				p = mr2.myrand();
 			}
 			break;
