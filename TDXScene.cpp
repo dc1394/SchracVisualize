@@ -19,7 +19,7 @@
 #include <tbb/task_scheduler_init.h>                            // for tbb::task_scheduler_init
 
 namespace tdxscene {
-	float const TDXScene::MAGNIFICATION = 1.0f;
+	float const TDXScene::MAGNIFICATION = 1.2f;
 
 	TDXScene::TDXScene(std::shared_ptr<getdata::GetData> const & pgd) :
 		Complete([this]{ return complete_; }, nullptr),
