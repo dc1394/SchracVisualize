@@ -330,7 +330,19 @@ namespace tdxscene {
 				break;
 			}
 
-			sign = (pp > 0.0) - (pp < 0.0);
+			switch (pgd_->Rho_wf_type_) {
+			case getdata::GetData::Rho_Wf_type::RHO:
+				sign = -1;
+				break;
+
+			case getdata::GetData::Rho_Wf_type::WF:
+				sign = (pp > 0.0) - (pp < 0.0);
+				break;
+
+			default:
+				BOOST_ASSERT(!"何かがおかしい!");
+				break;
+			}
 
 			if (!m && pgd_->Rho_wf_type_ == getdata::GetData::Rho_Wf_type::WF && reim == TDXScene::Re_Im_type::IMAGINARY) {
 				break;
