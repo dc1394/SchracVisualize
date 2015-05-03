@@ -1,7 +1,7 @@
 ﻿/*! \file tdxscene.cpp
-\brief TDXSceneクラスの実装
-Copyright ©  2015 @dc1394 All Rights Reserved.
-This software is released under the BSD-2 License.
+    \brief TDXSceneクラスの実装
+    Copyright ©  2015 @dc1394 All Rights Reserved.
+    This software is released under the BSD-2 License.
 */
 
 #include "DXUT.h"
@@ -296,8 +296,14 @@ namespace tdxscene {
 			case getdata::GetData::Rho_Wf_type::RHO:
 			{
 				auto const phi = std::acos(x / std::sqrt(x * x + y * y));
-				pp = boost::math::spherical_harmonic_r(pgd_->L, m, std::acos(z / r), phi);
-				pp = (*pgd_)(r) * pp * pp;
+                if (m >= 0) {
+                    pp = boost::math::spherical_harmonic_r(pgd_->L, m, std::acos(z / r), phi);
+                }
+                else {
+                    pp = boost::math::spherical_harmonic_i(pgd_->L, m, std::acos(z / r), phi);
+                }
+                
+                pp = ((*pgd_)(r)* pp * pp);
 				p = mr2.myrand();
 			}
 			break;
@@ -320,7 +326,7 @@ namespace tdxscene {
 					break;
 				}
 
-				pp = (*pgd_)(r)* ylm;
+				pp = (*pgd_)(r) * ylm;
 				p = mr2.myrand();
 			}
 			break;

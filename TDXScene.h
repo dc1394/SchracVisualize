@@ -230,6 +230,9 @@ namespace tdxscene {
 		*/
 		D3DXMATRIX projection_;
 
+        //! A private member variable.
+        /*!
+        */
 		ID3D10EffectMatrixVariable * projectionVariable_;
 
 		//! A private member variable.
@@ -255,8 +258,6 @@ namespace tdxscene {
 		描画するrの最大値
 		*/
 		double rmax_;
-
-		double thetamax;
 
 		//! A private member variable.
 		/*!
