@@ -6,7 +6,7 @@
 ★これは何？
 　「Schrac」の計算結果のアウトプットファイルを読み込み、可視化するコードです。ビ
 　ルドには、以下のライブラリが必要です。
-　・Boost C++ Libraries 1.57.0
+　・Boost C++ Libraries 1.58.0
 　・DirectX SDK (June 2010)
 　・GNU Scientific Library (GSL)
 　・Intel® Threading Building Blocks (Intel® TBB)
