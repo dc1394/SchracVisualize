@@ -3,7 +3,7 @@
 
     Copyright ©  2015 @dc1394 All Rights Reserved.
     (but this is originally adapted by Microsoft Corporation for Basic introduction to DXUT)
-    This software is released under the BSD-2 License.
+    This software is released under the BSD 2-Clause License.
 */
 
 #include "DXUT.h"

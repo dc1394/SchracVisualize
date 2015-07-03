@@ -2,7 +2,7 @@
 \brief rのメッシュと、そのメッシュにおける電子密度を与えるクラスの宣言
 
 Copyright © 2015 @dc1394 All Rights Reserved.
-This software is released under the BSD-2 License.
+This software is released under the BSD 2-Clause License.
 */
 
 #ifndef _GETRMESHANDRHO_H_
@@ -73,49 +73,49 @@ namespace getdata {
 
         //! A property.
         /*!
-        元素名
+			元素名
         */
-        Property<std::string> Atomname;
+        Property<std::string const &> Atomname;
 
         //! A property.
         /*!
-        関数の最大値のプロパティ
+			関数の最大値のプロパティ
         */
         Property<double> const Funcmax;
 
         //! A property.
         /*!
-        関数の最小値のプロパティ
+			関数の最小値のプロパティ
         */
         Property<double> const Funcmin;
 
         //!  A property.
         /*!
-        方位量子数へのプロパティ
+			方位量子数へのプロパティ
         */
         Property<std::uint32_t> const L;
 
         //!  A property.
         /*!
-        主量子数へのプロパティ
+			主量子数へのプロパティ
         */
         Property<std::int32_t> const N;
 
         //!  A property.
         /*!
-        軌道へのプロパティ
+			軌道へのプロパティ
         */
         Property<std::string> const Orbital;
 
         //!  A private member variable.
         /*!
-        解く方程式のタイプへのプロパティ
+			解く方程式のタイプへのプロパティ
         */
         Property<GetData::Rho_Wf_type> const Rho_wf_type_;
 
         //! A property.
         /*!
-        rのメッシュの最小値のプロパティ
+			rのメッシュの最小値のプロパティ
         */
         Property<double> const R_meshmin;
 

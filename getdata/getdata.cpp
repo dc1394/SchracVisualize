@@ -2,7 +2,7 @@
 \brief rのメッシュと、そのメッシュにおける電子密度を与えるクラスの実装
 
 Copyright © 2015 @dc1394 All Rights Reserved.
-This software is released under the BSD-2 License.
+This software is released under the BSD 2-Clause License.
 */
 
 #include "DXUT.h"
@@ -19,7 +19,7 @@ namespace getdata {
     // #region コンストラクタ
 
     GetData::GetData(std::string const & filename) :
-        Atomname([this] { return atomname_; }, nullptr),
+        Atomname([this] { return std::cref(atomname_); }, nullptr),
         Funcmax([this] { return funcmax_; }, nullptr),
         Funcmin([this] { return funcmin_; }, nullptr),
         L([this] { return l_; }, nullptr),

@@ -1,7 +1,7 @@
 ﻿/*! \file tdxscene.cpp
     \brief TDXSceneクラスの実装
     Copyright ©  2015 @dc1394 All Rights Reserved.
-    This software is released under the BSD-2 License.
+    This software is released under the BSD 2-Clause License.
 */
 
 #include "DXUT.h"
@@ -23,13 +23,13 @@ namespace tdxscene {
 
 	TDXScene::TDXScene(std::shared_ptr<getdata::GetData> const & pgd) :
 		Complete([this]{ return complete_; }, nullptr),
-		Pth([this]{ return pth_; }, nullptr),
+		Pth([this]{ return std::cref(pth_); }, nullptr),
 		Pgd(nullptr, [this](std::shared_ptr<getdata::GetData> const & val) {
-		rmax_ = GetRmax(val);
-		SetCamera();
-		return pgd_ = val;
-	}),
-		PvertexLayout([this]{ return vertexLayout_; }, nullptr),
+			rmax_ = GetRmax(val);
+			SetCamera();
+			return pgd_ = val;
+		}),
+		PvertexLayout([this]{ return std::cref(vertexLayout_); }, nullptr),
 		Redraw(nullptr, [this](bool redraw){ return redraw_ = redraw; }),
 		Thread_end(nullptr, [this](bool thread_end){ return RewriteWithLock(thread_end_, thread_end); }),
 		Vertexsize([this]{ return vertexsize_; }, [this](std::vector<SimpleVertex2>::size_type size) { return RewriteWithLock(vertexsize_, size); }),
