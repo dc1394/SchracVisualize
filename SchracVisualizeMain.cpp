@@ -353,7 +353,7 @@ void RenderText(ID3D10Device* pd3dDevice, double fTime)
     txthelper->DrawTextLine((boost::wformat(L"頂点数 = %d") % scene->Vertexsize()).str().c_str());
     txthelper->DrawTextLine(str.c_str());
     txthelper->End();
-    pd3dDevice->IASetInputLayout(scene->PvertexLayout().get());
+    pd3dDevice->IASetInputLayout(scene->PLayout().get());
 }
 
 

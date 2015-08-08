@@ -29,7 +29,7 @@ namespace tdxscene {
 			SetCamera();
 			return pgd_ = val;
 		}),
-		PvertexLayout([this]{ return std::cref(vertexLayout_); }, nullptr),
+		PLayout([this]{ return std::cref(pLyaout_); }, nullptr),
 		Redraw(nullptr, [this](bool redraw){ return redraw_ = redraw; }),
 		Thread_end(nullptr, [this](bool thread_end){ return RewriteWithLock(thread_end_, thread_end); }),
 		Vertexsize([this]{ return vertexsize_; }, [this](std::vector<SimpleVertex2>::size_type size) { return RewriteWithLock(vertexsize_, size); }),
@@ -114,10 +114,10 @@ namespace tdxscene {
 			return S_FALSE;
 		}
 
-		vertexLayout_.reset(pVertexLayout, utility::Safe_Release<ID3D10InputLayout>());
+		pLyaout_.reset(pVertexLayout, utility::Safe_Release<ID3D10InputLayout>());
 
 		// Set the input layout
-		pd3dDevice->IASetInputLayout(vertexLayout_.get());
+		pd3dDevice->IASetInputLayout(pLyaout_.get());
 
 		bd_.Usage = D3D10_USAGE_DEFAULT;
 		bd_.BindFlags = D3D10_BIND_VERTEX_BUFFER;
@@ -237,7 +237,7 @@ namespace tdxscene {
 		static auto const stride = static_cast<UINT>(sizeof(SimpleVertex2));
 		static auto const offset = 0U;
 		pd3dDevice->IASetVertexBuffers(0, 1, &vertexBuffertmp, &stride, &offset);
-		vertexBuffer_.reset(vertexBuffertmp);
+		pVertexBuffer_.reset(vertexBuffertmp);
 
 		return S_OK;
 	}
