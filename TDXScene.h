@@ -162,7 +162,7 @@ namespace tdxscene {
 		/*!
 			VertexLayoutのスマートポインタのプロパティ
 		*/
-		utility::Property<std::shared_ptr<ID3D10InputLayout> const &> const PLayout;
+		utility::Property<std::shared_ptr<ID3D10InputLayout> const &> const PInputLayout;
 
 		//! A property.
 		/*!
@@ -281,7 +281,7 @@ namespace tdxscene {
 		/*!
 			入力レイアウト インターフェイス
 		*/
-		std::shared_ptr<ID3D10InputLayout> pLyaout_;
+		std::shared_ptr<ID3D10InputLayout> pInputLayout_;
 
 		//! A private member variable.
 		/*!
