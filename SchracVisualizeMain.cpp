@@ -187,7 +187,7 @@ void RedrawFlagTrue();
 /*!
     画面の左上に情報を表示する
 */
-void RenderText();
+void RenderText(ID3D10Device* pd3dDevice, double fTime);
 
 //! A function.
 /*!
