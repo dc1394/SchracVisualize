@@ -12,7 +12,6 @@
 
 #include <array>                // for std::array
 #include <cstdint>              // for std::int32_t
-#include <memory>               // for std::unique_ptr
 #include <string>               // for std::wstring
 #include <boost/cast.hpp>       // for boost::numeric_cast
 #include <boost/optional.hpp>   // for boost::optional
