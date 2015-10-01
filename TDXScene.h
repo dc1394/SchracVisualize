@@ -1,8 +1,8 @@
 ﻿/*! \file tdxscene.h
-\brief TDXSceneクラスの宣言
+	\brief TDXSceneクラスの宣言
 
-Copyright ©  2015 @dc1394 All Rights Reserved.
-This software is released under the BSD 2-Clause License.
+	Copyright ©  2015 @dc1394 All Rights Reserved.
+	This software is released under the BSD 2-Clause License.
 */
 
 #ifndef _TDXSCENE_H_
