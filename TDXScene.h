@@ -15,6 +15,7 @@ This software is released under the BSD 2-Clause License.
 #include "getdata/getdata.h"
 #include "utility/property.h"
 #include "utility/utility.h"
+#include <atomic>				// for std::atomic
 #include <memory>               // for std::shared_ptr, for std::unique_ptr
 #include <thread>               // for std::thread
 #include <vector>               // for std::vector
@@ -216,7 +217,7 @@ namespace tdxscene {
 		/*!
 			描画スレッドの作業が完了したかどうか
 		*/
-		bool complete_;
+		std::atomic<bool> complete_;
 
 		//! A private member variable.
 		/*!
@@ -269,7 +270,7 @@ namespace tdxscene {
 		/*!
 			スレッドを強制終了するかどうか
 		*/
-		bool thread_end_ = false;
+		std::atomic<bool> thread_end_ = false;
 
 		//! A private member variable.
 		/*!
@@ -287,7 +288,7 @@ namespace tdxscene {
 		/*!
 			頂点数
 		*/
-		std::vector<SimpleVertex2>::size_type vertexsize_ = VERTEXSIZE_FIRST;
+		std::atomic<std::vector<SimpleVertex2>::size_type> vertexsize_ = VERTEXSIZE_FIRST;
 
 		//! A private member variable.
 		/*!
@@ -341,30 +342,11 @@ namespace tdxscene {
 
 	//! A function.
 	/*!
-	データオブジェクトからrmaxを求める
-	\param pgd データオブジェクト
-	\return rmaxの値
+		データオブジェクトからrmaxを求める
+		\param pgd データオブジェクト
+		\return rmaxの値
 	*/
 	double GetRmax(std::shared_ptr<getdata::GetData> const & pgd);
-
-	template <typename T>
-	//! A template function.
-	/*!
-	ロックをかけて変数を書き換える関数
-	\param dest 対象パラメータへの参照
-	\param source 値
-	\return 書き換えた値
-	*/
-	T RewriteWithLock(T & dest, T source)
-	{
-		std::mutex mtx;
-		{
-			std::lock_guard<std::mutex> lock(mtx);
-			dest = source;
-		}
-
-		return dest;
-	}
 }
 
 #endif  // _TDXSCENE_H_

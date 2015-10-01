@@ -16,13 +16,12 @@
 #include <boost/range/algorithm.hpp>                            // for boost::fill
 #include <tbb/parallel_for.h>                                   // for tbb::parallel_for
 #include <tbb/partitioner.h>                                    // for tbb::auto_partitioner
-#include <tbb/task_scheduler_init.h>                            // for tbb::task_scheduler_init
 
 namespace tdxscene {
 	float const TDXScene::MAGNIFICATION = 1.2f;
 
 	TDXScene::TDXScene(std::shared_ptr<getdata::GetData> const & pgd) :
-		Complete([this]{ return complete_; }, nullptr),
+		Complete([this]{ return complete_.load(); }, nullptr),
 		Pth([this]{ return std::cref(pth_); }, nullptr),
 		Pgd(nullptr, [this](std::shared_ptr<getdata::GetData> const & val) {
 			rmax_ = GetRmax(val);
@@ -31,8 +30,12 @@ namespace tdxscene {
 		}),
 		PInputLayout([this]{ return std::cref(pInputLayout_); }, nullptr),
 		Redraw(nullptr, [this](bool redraw){ return redraw_ = redraw; }),
-		Thread_end(nullptr, [this](bool thread_end){ return RewriteWithLock(thread_end_, thread_end); }),
-		Vertexsize([this]{ return vertexsize_; }, [this](std::vector<SimpleVertex2>::size_type size) { return RewriteWithLock(vertexsize_, size); }),
+		Thread_end(nullptr, [this](bool thread_end){ 
+			thread_end_.store(thread_end);
+			return thread_end; }),
+		Vertexsize([this]{ return vertexsize_.load(); }, [this](std::vector<SimpleVertex2>::size_type size) { 
+				vertexsize_.store(size);
+				return size; }),
 		projectionVariable_(nullptr),
 		pgd_(pgd),
 		rmax_(GetRmax(pgd)),
@@ -213,7 +216,7 @@ namespace tdxscene {
 			pth_.reset(new std::thread([this, m, reim]{ ClearFillSimpleVertex2(m, reim); }), [this](std::thread * pth)
 			{
 				if (pth->joinable()) {
-					RewriteWithLock(thread_end_, true);
+					thread_end_.store(true);
 					pth->join();
 				}
 
@@ -245,23 +248,21 @@ namespace tdxscene {
 
 	void TDXScene::ClearFillSimpleVertex2(std::int32_t m, TDXScene::Re_Im_type reim)
 	{
-		RewriteWithLock(complete_, false);
+		complete_.store(false);
 
 		SimpleVertex2 sv2;
 		sv2.Col = { 0.0f, 0.0f, 0.0f, 0.0f };
 		sv2.Pos = { 0.0f, 0.0f, 0.0f };
 		boost::fill(vertices_, sv2);
 
-		tbb::task_scheduler_init init;
-
 		tbb::parallel_for(
-			std::uint32_t(0),
-			boost::numeric_cast<std::uint32_t>(vertexsize_),
-			std::uint32_t(1),
-			[this, m, reim](std::uint32_t i) { FillSimpleVertex2(m, reim, vertices_[i]); },
+			0,
+			boost::numeric_cast<std::int32_t>(vertexsize_.load()),
+			1,
+			[this, m, reim](std::int32_t i) { FillSimpleVertex2(m, reim, vertices_[i]); },
 			tbb::auto_partitioner());
 
-		RewriteWithLock(complete_, true);
+		complete_.store(true);
 	}
 
 
