@@ -339,7 +339,7 @@ namespace tdxscene {
 
 			switch (pgd_->Rho_wf_type_) {
 			case getdata::GetData::Rho_Wf_type::RHO:
-				sign = -1;
+				sign = 1;
 				break;
 
 			case getdata::GetData::Rho_Wf_type::WF:
