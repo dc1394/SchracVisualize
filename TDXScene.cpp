@@ -259,8 +259,7 @@ namespace tdxscene {
 			0,
 			boost::numeric_cast<std::int32_t>(vertexsize_.load()),
 			1,
-			[this, m, reim](std::int32_t i) { FillSimpleVertex2(m, reim, vertices_[i]); },
-			tbb::auto_partitioner());
+			[this, m, reim](std::int32_t i) { FillSimpleVertex2(m, reim, vertices_[i]); });
 
 		complete_.store(true);
 	}
@@ -297,14 +296,15 @@ namespace tdxscene {
 			case getdata::GetData::Rho_Wf_type::RHO:
 			{
 				auto const phi = std::acos(x / std::sqrt(x * x + y * y));
+                double v;
                 if (m >= 0) {
-                    pp = boost::math::spherical_harmonic_r(pgd_->L, m, std::acos(z / r), phi);
+                    v = boost::math::spherical_harmonic_r(pgd_->L, m, std::acos(z / r), phi);
                 }
                 else {
-                    pp = boost::math::spherical_harmonic_i(pgd_->L, m, std::acos(z / r), phi);
+                    v = boost::math::spherical_harmonic_i(pgd_->L, m, std::acos(z / r), phi);
                 }
                 
-                pp = ((*pgd_)(r)* pp * pp);
+                pp = ((*pgd_)(r) * v * v);
 				p = mr2.myrand();
 			}
 			break;
